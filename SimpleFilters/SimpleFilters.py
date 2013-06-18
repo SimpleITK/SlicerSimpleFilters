@@ -136,7 +136,6 @@ class SimpleFiltersWidget:
     
     self.filterParameters = FilterParameters(parametersCollapsibleButton)
 
-
     #
     # Apply Button
     #
@@ -374,13 +373,13 @@ class FilterParameters(object):
       self.widgets.append(inputSelectorLabel)
 
       # connect and verify parameters
-      self.inputs.append(None)
-      inputSelector.connect("currentNodeChanged(vtkMRMLNode*)", lambda node,i=n:self.onInputSelect(node,i))
+      inputSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node,i=n:self.onInputSelect(node,i))
 
       
       # add to layout after connection
       parametersFormLayout.addRow(inputSelectorLabel, inputSelector)
 
+      self.inputs.append(inputSelector.currentNode())
 
     for member in json["members"]:
       t = member["type"]
@@ -454,22 +453,30 @@ class FilterParameters(object):
     #
     # output volume selector
     #
-    self.outputSelector = slicer.qMRMLNodeComboBox()
-    self.widgets.append(self.outputSelector)
-    self.outputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
-    self.outputSelector.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap", 0 )
-    self.outputSelector.selectNodeUponCreation = False
-    self.outputSelector.addEnabled = True
-    self.outputSelector.removeEnabled = True
-    self.outputSelector.noneEnabled = False
-    self.outputSelector.showHidden = False
-    self.outputSelector.showChildNodeTypes = False
-    self.outputSelector.setMRMLScene( slicer.mrmlScene )
-    self.outputSelector.setToolTip( "Pick the output to the algorithm." )
+    outputSelector = slicer.qMRMLNodeComboBox()
+    self.widgets.append(outputSelector)
+    outputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
+    outputSelector.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap", 0 )
+    outputSelector.selectNodeUponCreation = False
+    outputSelector.addEnabled = True
+    outputSelector.removeEnabled = True
+    outputSelector.noneEnabled = False
+    outputSelector.showHidden = False
+    outputSelector.showChildNodeTypes = False
+    outputSelector.setMRMLScene( slicer.mrmlScene )
+    outputSelector.setToolTip( "Pick the output to the algorithm." )
+
     outputSelectorLabel = qt.QLabel("Output Volume: ")
     self.widgets.append(outputSelectorLabel)
-    parametersFormLayout.addRow(outputSelectorLabel, self.outputSelector)
-    self.outputSelector.connect("currentNodeChanged(vtkMRMLNode*)", lambda node:self.onOutputSelect(node))
+
+    outputSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node:self.onOutputSelect(node))
+
+    # add to layout after connection
+    parametersFormLayout.addRow(outputSelectorLabel, outputSelector)
+
+    
+    self.output = outputSelector.currentNode()
+
 
   def onInputSelect(self, mrmlNode, n):
     self.inputs[n] = mrmlNode
