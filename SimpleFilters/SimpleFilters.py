@@ -117,24 +117,23 @@ class SimpleFiltersWidget:
     # Layout within the dummy collapsible button
     filtersFormLayout = qt.QFormLayout(filtersCollapsibleButton)
 
-    #
-    # filter selector
-    # 
+    # filter search
     self.searchBox = ctk.ctkSearchBox()
-    filtersFormLayout.addRow("Search", self.searchBox)
+    filtersFormLayout.addRow("Search:", self.searchBox)
     self.searchBox.connect("textChanged(QString)", self.onSearch)
 
+    # filter selector
     self.filterSelector = qt.QComboBox()
-    filtersFormLayout.addRow("Filter", self.filterSelector)
+    filtersFormLayout.addRow("Filter:", self.filterSelector)
     
     # add all the filters listed in the json files
-    for j in self.jsonFilters:
+    for idx,j in enumerate(self.jsonFilters):
       name = j["name"]
       # TODO: make the name pretty
-      self.filterSelector.addItem(name)
+      self.filterSelector.addItem(name, idx)
 
     # connections
-    self.filterSelector.connect('activated(int)', self.onFilterSelect)
+    self.filterSelector.connect('currentIndexChanged(int)', self.onFilterSelect)
 
 
     #
@@ -166,17 +165,18 @@ class SimpleFiltersWidget:
   def onSearch(self, searchText):
     # add all the filters listed in the json files
     self.filterSelector.clear()
-    for j in self.jsonFilters:
+    for idx,j in enumerate(self.jsonFilters):
       name = j["name"]
-      # TODO: make the name pretty
-      if name.lower().find(searchText) != -1:
-        self.filterSelector.addItem(name)
+      if name.lower().find(searchText.lower()) != -1:
+        self.filterSelector.addItem(name,idx)
     #self.filterSelector.showPopup()
 
-  def onFilterSelect(self, jsonIndex):
-    json = self.jsonFilters[jsonIndex]
-
+  def onFilterSelect(self, selectorIndex):
     self.filterParameters.destroy()
+    if selectorIndex < 0:
+      return
+    jsonIndex= self.filterSelector.itemData(selectorIndex)
+    json = self.jsonFilters[jsonIndex]
     self.filterParameters.create(json)
 
   def cleanup(self):
