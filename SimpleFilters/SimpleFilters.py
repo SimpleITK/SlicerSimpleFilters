@@ -448,7 +448,7 @@ class FilterParameters(object):
                "unsigned int", "int"]:
         w = self.createIntWidget(member["name"],member["default"],t)
       else:
-        print "Unknow member", member["name"], "of type", member["type"]
+        sys.stderr.write("Unknown member \"{0}\" of type \"{1}\"".format(member["name"],member["type"]))
         continue
 
       self.addWidgetWithToolTipAndLabel(w,member)
