@@ -60,8 +60,10 @@ class SimpleFiltersWidget:
       self.parent.show()
 
     pathToJSON = os.path.dirname(os.path.realpath(__file__)) + '/Resources/json/'
+    # need to hit reload to get correct file
     print("pathToJSON: ",pathToJSON)
     print(__file__)
+
     jsonFiles = glob(pathToJSON+"*.json")
 
     self.jsonFilters = []
@@ -79,8 +81,6 @@ class SimpleFiltersWidget:
 
   def setup(self):
     # Instantiate and connect widgets ...
-
-    print "Calling setup..."
 
     #
     # Reload and Test area
@@ -152,7 +152,6 @@ class SimpleFiltersWidget:
 
   def onFilterSelect(self, jsonIndex):
     json = self.jsonFilters[jsonIndex]
-    print json
 
     self.filterParameters.destroy()
     self.filterParameters.create(json)
@@ -403,10 +402,6 @@ class FilterParameters(object):
         exec('default = self.filter.Get{0}()'.format(member["name"]))  in globals(), locals()
         w.coordinates = ",".join(str(x) for x in default)
         
-        print w.coordinates
-
-        # TODO for default
-            
       elif t in ["double", "float"]:
         w = qt.QDoubleSpinBox()
         self.widgets.append(w)
@@ -484,30 +479,20 @@ class FilterParameters(object):
 
   def onInputSelect(self, mrmlNode, n):
     self.inputs[n] = mrmlNode
-    print "onInputSelect"
-    print self.filter
 
   def onOutputSelect(self, mrmlNode):
     self.output = mrmlNode
-    print "onOutputSelect"
-    print self.filter
 
   def onScalarChanged(self, name, val):
     exec('self.filter.Set{0}(val)'.format(name))
-    print "onScalarChanged"
-    print self.filter
 
   def onIntVectorChanged(self, name, widget, val):
     coords = [int(x) for x in widget.coordinates.split(',')]
     exec('self.filter.Set{0}(coords)'.format(name))
-    print "onIntVectorChanged"
-    print self.filter
 
   def onFloatVectorChanged(self, name, widget, val):
     coords = [float(x) for x in widget.coordinates.split(',')]
     exec('self.filter.Set{0}(coords)'.format(name))
-    print "onIntVectorChanged"
-    print self.filter
 
   def destroy(self):
     for w in self.widgets:
