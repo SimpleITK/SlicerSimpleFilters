@@ -383,88 +383,24 @@ class FilterParameters(object):
       t = member["type"]
     
       if "dim_vec" in member and int(member["dim_vec"]):
-        m = re.search(r"<([a-zA-Z ]+)>", t)
-        if m:
-          t = m.group(1)
-            
-#        if t in ["double", "float"]:
-        w = ctk.ctkCoordinatesWidget()
-        self.widgets.append(w)
-
-        #w.connect("coordinatesChanged(double*)", lambda val,name=member["name"]:self.onVectorChanged(name,val))
-        if t in ["double", "float"]:
-          w.setDecimals(5)
-          w.connect("coordinatesChanged(double*)", lambda val,widget=w,name=member["name"]:self.onFloatVectorChanged(name,widget,val))
-        else:
-          w.setDecimals(0)
-          w.connect("coordinatesChanged(double*)", lambda val,widget=w,name=member["name"]:self.onIntVectorChanged(name,widget,val))
-
-        exec('default = self.filter.Get{0}()'.format(member["name"]))  in globals(), locals()
-        w.coordinates = ",".join(str(x) for x in default)
-        
+        w = self.createVectorWidget(member["name"],t)
       elif t in ["double", "float"]:
-        w = qt.QDoubleSpinBox()
-        self.widgets.append(w)
-
-        v = str(member["default"])
-        if v[-1] == 'f':
-          v = v[:-1]
-
-        w.setRange(1.17549e-038, 3.40282e+038)
-        w.decimals = 5
-
-        w.setValue(float(v))
-        w.connect("valueChanged(double)", lambda val,name=member["name"]:self.onScalarChanged(name,val))
-
+        w = self.createDoubleWidget(member["name"],member["default"])
       elif t == "bool":
-        w = qt.QCheckBox()
-        self.widgets.append(w)
-
-        if member["default"].lower != "true":
-          w.setChecked(False)
-        w.connect("stateChanged(int)", lambda val,name=member["name"]:self.onScalarChanged(name,bool(val)))
-
+        w = self.createBoolWidget(member["name"],member["default"])
       elif t in ["uint8_t", "int8_t",
                "uint16_t", "int16_t",
                "uint32_t", "int32_t",
                "uint64_t", "int64_t",
                "unsigned int", "int"]:
-        
-        w = qt.QSpinBox()
-        self.widgets.append(w)
-
-        if t == "uint8_t":
-          w.setRange(0,255)
-        elif t == "int8_t":
-          w.setRange(-128,127)
-        elif t == "uint16_t":
-          w.setRange(0,65535)
-        elif t == "int16_t":
-          w.setRange(-32678,32767)
-        elif t == "uint32_t" or  t == "uint64_t" or t == "unsigned int":
-          w.setRange(0,2147483647)
-        elif t == "int32_t" or  t == "uint64_t" or t == "int":
-          w.setRange(-2147483648,2147483647)
-
-        v = str(member["default"])
-        if v[-1] == 'u':
-          v = v[:-1]
-        w.setValue(int(v))
-        w.connect("valueChanged(int)", lambda val,name=member["name"]:self.onScalarChanged(name,val))
-
+        w = self.createIntWidget(member["name"],member["default"],t)
       else:
+        print "Unknow member", member["name"], "of type", member["type"]
         continue
 
-      if "briefdescriptionSet" in member and len(member["briefdescriptionSet"]):
-        w.setToolTip(member["briefdescriptionSet"])
-      elif "detaileddescriptionSet" in member:
-        w.setToolTip(member["detaileddescriptionSet"])
+      self.addWidgetWithToolTipAndLabel(w,member)
 
-      l = qt.QLabel(member["name"]+": ")
-      self.widgets.append(l)
-
-      parametersFormLayout.addRow(l,w)
-
+    # end for each member
 
     #
     # output volume selector
@@ -473,13 +409,14 @@ class FilterParameters(object):
     self.widgets.append(outputSelector)
     outputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
     outputSelector.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap", 0 )
-    outputSelector.selectNodeUponCreation = False
+    outputSelector.selectNodeUponCreation = True
     outputSelector.addEnabled = True
-    outputSelector.removeEnabled = True
+    outputSelector.removeEnabled = False
     outputSelector.renameEnabled = True
     outputSelector.noneEnabled = False
     outputSelector.showHidden = False
     outputSelector.showChildNodeTypes = False
+    outputSelector.baseName = json["name"]+" Output"
     outputSelector.setMRMLScene( slicer.mrmlScene )
     outputSelector.setToolTip( "Pick the output to the algorithm." )
 
@@ -492,6 +429,89 @@ class FilterParameters(object):
     parametersFormLayout.addRow(outputSelectorLabel, outputSelector)
     
     self.output = outputSelector.currentNode()
+
+  def createVectorWidget(self,name,type):
+    m = re.search(r"<([a-zA-Z ]+)>", type)
+    if m:
+      type = m.group(1)
+            
+    w = ctk.ctkCoordinatesWidget()
+    self.widgets.append(w)
+
+    if type in ["double", "float"]:
+      w.setDecimals(5)
+      w.minimum=-3.40282e+038
+      w.maximum=3.40282e+038
+      w.connect("coordinatesChanged(double*)", lambda val,widget=w,name=name:self.onFloatVectorChanged(name,widget,val))
+    else:
+      w.setDecimals(0)
+      w.connect("coordinatesChanged(double*)", lambda val,widget=w,name=name:self.onIntVectorChanged(name,widget,val))
+
+    exec('default = self.filter.Get{0}()'.format(name)) in globals(), locals()
+    w.coordinates = ",".join(str(x) for x in default)
+    return w
+
+  def createIntWidget(self,name,default="0",type="int"):
+    
+    w = qt.QSpinBox()
+    self.widgets.append(w)
+
+    if type=="uint8_t":
+      w.setRange(0,255)
+    elif type=="int8_t":
+      w.setRange(-128,127)
+    elif type=="uint16_t":
+      w.setRange(0,65535)
+    elif type=="int16_t":
+      w.setRange(-32678,32767)
+    elif type=="uint32_t" or  type=="uint64_t" or type=="unsigned int":
+      w.setRange(0,2147483647)
+    elif type=="int32_t" or  type=="uint64_t" or type=="int":
+      w.setRange(-2147483648,2147483647)
+
+    v = str(default)
+    if v[-1]=='u':
+      v = v[:-1]
+    w.setValue(int(v))
+    w.connect("valueChanged(int)", lambda val,name=name:self.onScalarChanged(name,val))
+    return w
+ 
+  def createBoolWidget(self,name,default="false"):
+    w = qt.QCheckBox()
+    self.widgets.append(w)
+
+    w.setChecked(default.lower=="true")
+
+    w.connect("stateChanged(int)", lambda val,name=name:self.onScalarChanged(name,bool(val)))
+      
+    return w
+
+  def createDoubleWidget(self,name,default="0.0f"):
+    w = qt.QDoubleSpinBox()
+    self.widgets.append(w)
+
+    w.setRange(-3.40282e+038, 3.40282e+038)
+    w.decimals = 5
+
+    v = str(default)
+    if v[-1]=='f':
+      v = v[:-1]
+    w.setValue(float(v))
+    w.connect("valueChanged(double)", lambda val,name=name:self.onScalarChanged(name,val))
+
+    return w
+
+  def addWidgetWithToolTipAndLabel(self,widget,memberJSON):
+    if "briefdescriptionSet" in memberJSON and len(memberJSON["briefdescriptionSet"]):
+      widget.setToolTip(memberJSON["briefdescriptionSet"])
+    elif "detaileddescriptionSet" in memberJSON:
+      widget.setToolTip(memberJSON["detaileddescriptionSet"])
+        
+    l = qt.QLabel(memberJSON["name"]+": ")
+    self.widgets.append(l)
+
+    parametersFormLayout = self.parent.layout()
+    parametersFormLayout.addRow(l,widget)
 
 
   def onInputSelect(self, mrmlNode, n):
