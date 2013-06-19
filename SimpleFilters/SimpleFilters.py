@@ -409,6 +409,10 @@ class FilterParameters(object):
         v = str(member["default"])
         if v[-1] == 'f':
           v = v[:-1]
+
+        w.setRange(1.17549e-038, 3.40282e+038)
+        w.decimals = 5
+
         w.setValue(float(v))
         w.connect("valueChanged(double)", lambda val,name=member["name"]:self.onScalarChanged(name,val))
 
@@ -428,6 +432,19 @@ class FilterParameters(object):
         
         w = qt.QSpinBox()
         self.widgets.append(w)
+
+        if t == "uint8_t":
+          w.setRange(0,255)
+        elif t == "int8_t":
+          w.setRange(-128,127)
+        elif t == "uint16_t":
+          w.setRange(0,65535)
+        elif t == "int16_t":
+          w.setRange(-32678,32767)
+        elif t == "uint32_t" or  t == "uint64_t" or t == "unsigned int":
+          w.setRange(0,2147483647)
+        elif t == "int32_t" or  t == "uint64_t" or t == "int":
+          w.setRange(-2147483648,2147483647)
 
         v = str(member["default"])
         if v[-1] == 'u':
