@@ -359,7 +359,6 @@ class FilterParameters(object):
       inputSelector = slicer.qMRMLNodeComboBox()
       self.widgets.append(inputSelector)
       inputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
-      inputSelector.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap", 0 )
       inputSelector.selectNodeUponCreation = True
       inputSelector.addEnabled = False
       inputSelector.removeEnabled = False
@@ -395,8 +394,10 @@ class FilterParameters(object):
 
         #w.connect("coordinatesChanged(double*)", lambda val,name=member["name"]:self.onVectorChanged(name,val))
         if t in ["double", "float"]:
+          w.setDecimals(5)
           w.connect("coordinatesChanged(double*)", lambda val,widget=w,name=member["name"]:self.onFloatVectorChanged(name,widget,val))
         else:
+          w.setDecimals(0)
           w.connect("coordinatesChanged(double*)", lambda val,widget=w,name=member["name"]:self.onIntVectorChanged(name,widget,val))
 
         exec('default = self.filter.Get{0}()'.format(member["name"]))  in globals(), locals()
@@ -463,6 +464,7 @@ class FilterParameters(object):
     outputSelector.selectNodeUponCreation = False
     outputSelector.addEnabled = True
     outputSelector.removeEnabled = True
+    outputSelector.renameEnabled = True
     outputSelector.noneEnabled = False
     outputSelector.showHidden = False
     outputSelector.showChildNodeTypes = False
