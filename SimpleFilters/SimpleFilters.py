@@ -379,6 +379,23 @@ class FilterParameters(object):
 
       self.inputs.append(inputSelector.currentNode())
 
+    #end for each input
+
+    if json["template_code_filename"] == "KernelImageFilter":
+      w = self.createVectorWidget("KernelRadius","std::vector<uint32_t>")
+      self.widgets.append(w)
+      self.addWidgetWithToolTipAndLabel(w,{"briefdescriptionSet":"Radius of structuring element","name":"KernelRadius"})
+
+      w = qt.QComboBox()
+      self.widgets.append(w)
+      w.addItem("Annulus")
+      w.addItem("Box")
+      w.addItem("Ball")
+      w.addItem("Cross")
+      w.currentIndex = 2
+      w.connect('activated(int)', lambda i:self.filter.SetKernelType(i) )
+      self.addWidgetWithToolTipAndLabel(w,{"briefdescriptionSet":"Structuring element","name":"Kernel Type"})
+
     for member in json["members"]:
       t = member["type"]
     
