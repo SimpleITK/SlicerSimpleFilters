@@ -611,10 +611,12 @@ class FilterParameters(object):
 
     # get the first in the list
     for listIndex in range(annotationHierarchyNode.GetNumberOfChildrenNodes()):
-      #if annotationHierarchyNode.GetNthChildNode(listIndex) is None:
-      #  continue
+      if annotationHierarchyNode.GetNthChildNode(listIndex) is None:
+        continue
 
       annotation = annotationHierarchyNode.GetNthChildNode(listIndex).GetAssociatedNode()
+      if annotation is None:
+        continue
 
       coord = [0,0,0]
       # todo: use GetFiducialWorldCoordinate when available
