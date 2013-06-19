@@ -164,6 +164,8 @@ class SimpleFiltersWidget:
     self.applyButton.enabled = True
 
   def onApplyButton(self):
+    self.filterParameters.prerun()
+
     logic = SimpleFiltersLogic()
     print("Run the algorithm")
 
@@ -333,6 +335,7 @@ class FilterParameters(object):
     self.filter = None
     self.inputs = []
     self.output = None
+    self.prerun_callbacks = []
 
   def __del__(self):
     self.destroy()
@@ -350,10 +353,12 @@ class FilterParameters(object):
     # You can't use exec in a function that has a subfunction, unless you specify a context.
     exec( 'self.filter = sitk.{0}()'.format(json["name"]))  in globals(), locals()
 
+    self.prerun_callbacks = []
+    self.inputs = []
+
     #
     # input volume selectors
     #
-    self.inputs = []
     for n in range(json["number_of_inputs"]):
       inputSelector = slicer.qMRMLNodeComboBox()
       self.widgets.append(inputSelector)
@@ -372,7 +377,6 @@ class FilterParameters(object):
 
       # connect and verify parameters
       inputSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node,i=n:self.onInputSelect(node,i))
-
 
       # add to layout after connection
       parametersFormLayout.addRow(inputSelectorLabel, inputSelector)
@@ -395,6 +399,38 @@ class FilterParameters(object):
       w.currentIndex = 2
       w.connect('activated(int)', lambda i:self.filter.SetKernelType(i) )
       self.addWidgetWithToolTipAndLabel(w,{"briefdescriptionSet":"Structuring element","name":"Kernel Type"})
+
+
+    elif json["template_code_filename"] == "RegionGrowingImageFilter"\
+          or json["template_code_filename"] == "FastMarchingImageFilter":
+
+      name="SeedList"
+      if (json["template_code_filename"] == "FastMarchingImageFilter"):
+        name="TrialPoints"
+
+      fiducialSelector = slicer.qMRMLNodeComboBox()
+      self.widgets.append(fiducialSelector)
+      fiducialSelector.nodeTypes = ( ("vtkMRMLAnnotationHierarchyNode"), "" )
+      fiducialSelector.selectNodeUponCreation = True
+      fiducialSelector.addEnabled = True
+      fiducialSelector.removeEnabled = False
+      fiducialSelector.renameEnabled = True
+      fiducialSelector.noneEnabled = False
+      fiducialSelector.showHidden = False
+      fiducialSelector.showChildNodeTypes = True
+      fiducialSelector.setMRMLScene( slicer.mrmlScene )
+      fiducialSelector.setToolTip( "Pick the Fiducial node for the seed list." )
+
+      fiducialSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node,name=name:self.onFiducialListNode(name,node))
+      self.prerun_callbacks.append(lambda w=fiducialSelector,name=name:self.onFiducialListNode(name,w.currentNode()))
+
+      fiducialSelectorLabel = qt.QLabel("{0}: ".format(name))
+      self.widgets.append(fiducialSelectorLabel)
+
+      #todo set tool tip
+      # add to layout after connection
+      parametersFormLayout.addRow(fiducialSelectorLabel, fiducialSelector)
+
 
     for member in json["members"]:
       t = member["type"]
@@ -534,8 +570,44 @@ class FilterParameters(object):
   def onInputSelect(self, mrmlNode, n):
     self.inputs[n] = mrmlNode
 
+    if n == 0 and self.inputs[0]:
+        imgNodeName = self.inputs[0].GetName()
+        img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNodeName) )
+
+  def onPrimaryInputSelect(self, img):
+    pass
+
   def onOutputSelect(self, mrmlNode):
     self.output = mrmlNode
+
+  def onFiducialListNode(self, name, mrmlNode):
+    annotationHierarchyNode = mrmlNode
+
+    # list of points in physical space
+    coords = []
+
+    # get the first in the list
+    for listIndex in range(annotationHierarchyNode.GetNumberOfChildrenNodes()):
+      #if annotationHierarchyNode.GetNthChildNode(listIndex) is None:
+      #  continue
+
+      annotation = annotationHierarchyNode.GetNthChildNode(listIndex).GetAssociatedNode()
+
+      coord = [0,0,0]
+      # todo: use GetFiducialWorldCoordinate when available
+      annotation.GetFiducialCoordinates(coord)
+      coords.append(coord)
+
+    if self.inputs[0]:
+      imgNodeName = self.inputs[0].GetName()
+      img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNodeName) )
+
+      # HACK transform from RAS to LPS
+      coords = [ [-pt[0],-pt[1],pt[2]] for pt in coords]
+
+      idx_coords = [img.TransformPhysicalPointToIndex(pt) for pt in coords]
+
+      exec('self.filter.Set{0}(idx_coords)'.format(name))
 
   def onScalarChanged(self, name, val):
     exec('self.filter.Set{0}(val)'.format(name))
@@ -547,6 +619,10 @@ class FilterParameters(object):
   def onFloatVectorChanged(self, name, widget, val):
     coords = [float(x) for x in widget.coordinates.split(',')]
     exec('self.filter.Set{0}(coords)'.format(name))
+
+  def prerun(self):
+    for f in self.prerun_callbacks:
+      f()
 
   def destroy(self):
     for w in self.widgets:
