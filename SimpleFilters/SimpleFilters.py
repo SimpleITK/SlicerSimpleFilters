@@ -121,7 +121,7 @@ class SimpleFiltersWidget:
       self.filterSelector.addItem(name)
 
     # connections
-    self.filterSelector.connect('currentIndexChanged(int)', self.onFilterSelect)
+    self.filterSelector.connect('activated(int)', self.onFilterSelect)
 
 
     #
@@ -392,15 +392,18 @@ class FilterParameters(object):
 #        if t in ["double", "float"]:
         w = ctk.ctkCoordinatesWidget()
         self.widgets.append(w)
-        
-        print(help(w.setCoordinates))
 
-        exec('w.setCoordinates(*self.filter.Get{0}())'.format(member["name"]))  in globals(), locals()
+        #w.connect("coordinatesChanged(double*)", lambda val,name=member["name"]:self.onVectorChanged(name,val))
+        if t in ["double", "float"]:
+          w.connect("coordinatesChanged(double*)", lambda val,widget=w,name=member["name"]:self.onFloatVectorChanged(name,widget,val))
+        else:
+          w.connect("coordinatesChanged(double*)", lambda val,widget=w,name=member["name"]:self.onIntVectorChanged(name,widget,val))
+
+        exec('default = self.filter.Get{0}()'.format(member["name"]))  in globals(), locals()
+        w.coordinates = ",".join(str(x) for x in default)
         
-        print dir(w)
-        print type(w.coordinates)
         print w.coordinates
-          
+
         # TODO for default
             
       elif t in ["double", "float"]:
@@ -473,7 +476,6 @@ class FilterParameters(object):
 
     # add to layout after connection
     parametersFormLayout.addRow(outputSelectorLabel, outputSelector)
-
     
     self.output = outputSelector.currentNode()
 
@@ -489,8 +491,20 @@ class FilterParameters(object):
     print self.filter
 
   def onScalarChanged(self, name, val):
-    exec( 'self.filter.Set{0}(val)'.format(name)) in globals(), locals()
+    exec('self.filter.Set{0}(val)'.format(name))
     print "onScalarChanged"
+    print self.filter
+
+  def onIntVectorChanged(self, name, widget, val):
+    coords = [int(x) for x in widget.coordinates.split(',')]
+    exec('self.filter.Set{0}(coords)'.format(name))
+    print "onIntVectorChanged"
+    print self.filter
+
+  def onFloatVectorChanged(self, name, widget, val):
+    coords = [float(x) for x in widget.coordinates.split(',')]
+    exec('self.filter.Set{0}(coords)'.format(name))
+    print "onIntVectorChanged"
     print self.filter
 
   def destroy(self):
