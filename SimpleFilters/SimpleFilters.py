@@ -688,7 +688,17 @@ class SimpleFiltersTest(unittest.TestCase):
     """Run as few or as many tests as needed here.
     """
     self.setUp()
-    self.test_SimpleFilters1()
+
+
+    testWidget = slicer.modules.SimpleFiltersWidget
+
+    # Run through all the loaded filters and get the widget to generate the GUI
+    for filterIdx in range(testWidget.filterSelector.count):
+      someJSON=slicer.modules.SimpleFiltersWidget.jsonFilters[filterIdx]
+      self.delayDisplay("Testing filter \"{0}\" ({1} of {2}).".format(someJSON["name"], filterIdx, testWidget.filterSelector.count) )
+      testWidget.filterSelector.setCurrentIndex(filterIdx)
+
+    return True
 
   def test_SimpleFilters1(self):
     """ Ideally you should have several levels of tests.  At the lowest level
