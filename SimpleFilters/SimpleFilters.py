@@ -182,6 +182,8 @@ class SimpleFiltersWidget:
     json = self.jsonFilters[jsonIndex]
     self.filterParameters.create(json)
 
+    self.filterSelector.setToolTip(self.jsonFilters[jsonIndex]["briefdescription"])
+
   def cleanup(self):
     pass
 
