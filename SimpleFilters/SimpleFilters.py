@@ -449,6 +449,7 @@ class FilterParameters(object):
       fiducialSelector = slicer.qMRMLNodeComboBox()
       self.widgets.append(fiducialSelector)
       fiducialSelector.nodeTypes = ( ("vtkMRMLAnnotationHierarchyNode"), "" )
+      fiducialSelector.addAttribute("vtkMRMLAnnotationHierarchyNode", "MainChildType", "vtkMRMLAnnotationFiducialNode" )
       fiducialSelector.selectNodeUponCreation = True
       fiducialSelector.addEnabled = True
       fiducialSelector.removeEnabled = False
