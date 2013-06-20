@@ -707,7 +707,7 @@ class SimpleFiltersTest(unittest.TestCase):
     # Run through all the loaded filters and get the widget to generate the GUI
     for filterIdx in range(testWidget.filterSelector.count):
       someJSON=slicer.modules.SimpleFiltersWidget.jsonFilters[filterIdx]
-      self.delayDisplay("Testing filter \"{0}\" ({1} of {2}).".format(someJSON["name"], filterIdx, testWidget.filterSelector.count) )
+      self.delayDisplay("Testing filter \"{0}\" ({1} of {2}).".format(someJSON["name"], filterIdx, testWidget.filterSelector.count),msec=100 )
       testWidget.filterSelector.setCurrentIndex(filterIdx)
 
     return True
