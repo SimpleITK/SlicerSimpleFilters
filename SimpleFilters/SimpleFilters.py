@@ -72,7 +72,10 @@ class SimpleFiltersWidget:
       try:
         fp = file(fname, "r")
         j = json.load(fp,object_pairs_hook=OrderedDict)
-        self.jsonFilters.append(j)
+        if j["name"] in dir(sitk):
+          self.jsonFilters.append(j)
+        else:
+          sys.stderr.write("Unknown SimpleITK class \"{0}\".\n".format(j["name"]))
       except:
         print "Error while reading $1", fname
 
