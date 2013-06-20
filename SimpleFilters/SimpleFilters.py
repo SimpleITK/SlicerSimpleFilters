@@ -125,7 +125,7 @@ class SimpleFiltersWidget:
     # filter selector
     self.filterSelector = qt.QComboBox()
     filtersFormLayout.addRow("Filter:", self.filterSelector)
-    
+
     # add all the filters listed in the json files
     for idx,j in enumerate(self.jsonFilters):
       name = j["name"]
@@ -192,17 +192,9 @@ class SimpleFiltersWidget:
     logic = SimpleFiltersLogic()
     print("Run the algorithm")
 
-    inputImages = []
+    print self.filterParameters.filter
 
-    for i in self.filterParameters.inputs:
-      imgNodeName = i.GetName()
-      img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNodeName) )
-      inputImages.append(img)
-
-    img = self.filterParameters.filter.Execute(*inputImages)
-
-    imgNodeName = self.filterParameters.output.GetName()
-    sitkUtils.PushToSlicer(img, imgNodeName, overwrite=True)
+    logic.run(self.filterParameters.filter, self.filterParameters.output, *self.filterParameters.inputs)
 
     print("done")
 
@@ -329,7 +321,18 @@ class SimpleFiltersLogic:
     except Exception as e:
       print e
 
-  def run(self, *args):
+  def updateOutput(self,img):
+
+    nodeWriteAddress=sitkUtils.GetSlicerITKReadWriteAddress(self.outputNodeName)
+    sitk.WriteImage(img,nodeWriteAddress)
+
+    node = slicer.util.getNode(self.outputNodeName)
+
+    selectionNode = slicer.app.applicationLogic().GetSelectionNode()
+    selectionNode.SetReferenceActiveVolumeID( node.GetID() )
+    slicer.app.applicationLogic().PropagateVolumeSelection(0)
+
+  def run(self, filter, outputMRMLNode, *inputs):
     """
     Run the actual algorithm
     """
@@ -338,11 +341,20 @@ class SimpleFiltersLogic:
       print "already executing"
       return
 
+    inputImages = []
 
-    self.thread = threading.Thread( target=lambda:self.thread_doit())
-    self.thread.start()
+    for i in inputs:
+      imgNodeName = i.GetName()
+      img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNodeName) )
+      inputImages.append(img)
 
-    self.main_queue_start()
+    self.output = None
+    self.outputNodeName = outputMRMLNode.GetName()
+
+    img = filter.Execute(*inputImages)
+
+    self.updateOutput(img)
+
 #
 # Class to manage parameters
 #
