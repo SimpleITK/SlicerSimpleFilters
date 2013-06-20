@@ -169,7 +169,7 @@ class SimpleFiltersWidget:
       name = j["name"]
       if name.lower().find(searchText.lower()) != -1:
         self.filterSelector.addItem(name,idx)
-    #self.filterSelector.showPopup()
+
 
   def onFilterSelect(self, selectorIndex):
     self.filterParameters.destroy()
@@ -307,7 +307,7 @@ class SimpleFiltersLogic:
     qt.QTimer.singleShot(10, self.main_queue_process)
 
   def main_queue_stop(self):
-    """Begins monitoring of main_queue for callables"""
+    """End monitoring of main_queue for callables"""
     self.main_queue_running = False
     print "Stopping queue process"
 
@@ -471,7 +471,7 @@ class FilterParameters(object):
                "unsigned int", "int"]:
         w = self.createIntWidget(member["name"],member["default"],t)
       else:
-        sys.stderr.write("Unknown member \"{0}\" of type \"{1}\"".format(member["name"],member["type"]))
+        sys.stderr.write("Unknown member \"{0}\" of type \"{1}\"\n".format(member["name"],member["type"]))
         continue
 
       self.addWidgetWithToolTipAndLabel(w,member)
