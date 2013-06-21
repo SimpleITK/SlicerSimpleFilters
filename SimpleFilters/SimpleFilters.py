@@ -596,13 +596,17 @@ class FilterParameters(object):
     return w
 
   def addWidgetWithToolTipAndLabel(self,widget,memberJSON):
+    tip=""
     if "briefdescriptionSet" in memberJSON and len(memberJSON["briefdescriptionSet"]):
-      widget.setToolTip(memberJSON["briefdescriptionSet"])
+      tip=memberJSON["briefdescriptionSet"]
     elif "detaileddescriptionSet" in memberJSON:
-      widget.setToolTip(memberJSON["detaileddescriptionSet"])
+      tip=memberJSON["detaileddescriptionSet"]
 
     l = qt.QLabel(memberJSON["name"]+": ")
     self.widgets.append(l)
+
+    widget.setToolTip(tip)
+    l.setToolTip(tip)
 
     parametersFormLayout = self.parent.layout()
     parametersFormLayout.addRow(l,widget)
