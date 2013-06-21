@@ -291,12 +291,14 @@ class SimpleFiltersLogic:
       return False
     return True
 
-  def thread_doit(self):
+  def thread_doit(self,filter,*inputImages):
     try:
-      self.main_queue.put(lambda:self.main_queue_stop)
+      img = filter.Execute(*inputImages)
+      self.main_queue.put(lambda img=img:self.updateOutput(img))
+      self.main_queue.put(self.main_queue_stop)
     except Exception as e:
       print "Exception:", e
-      self.main_queue.put(lambda:self.main_queue_stop)
+      self.main_queue.put(self.main_queue_stop)
 
   def main_queue_start(self):
     """Begins monitoring of main_queue for callables"""
@@ -356,9 +358,10 @@ class SimpleFiltersLogic:
     self.output = None
     self.outputNodeName = outputMRMLNode.GetName()
 
-    img = filter.Execute(*inputImages)
+    self.thread = threading.Thread( target=lambda f=filter,i=inputImages:self.thread_doit(f,*inputImages))
 
-    self.updateOutput(img)
+    self.main_queue_start()
+    self.thread.start()
 
 #
 # Class to manage parameters
