@@ -132,7 +132,6 @@ class SimpleFiltersWidget:
     # add all the filters listed in the json files
     for idx,j in enumerate(self.jsonFilters):
       name = j["name"]
-      # TODO: make the name pretty
       self.filterSelector.addItem(name, idx)
 
     # connections
@@ -182,7 +181,8 @@ class SimpleFiltersWidget:
     json = self.jsonFilters[jsonIndex]
     self.filterParameters.create(json)
 
-    self.filterSelector.setToolTip(self.jsonFilters[jsonIndex]["briefdescription"])
+    if "briefdescription" in self.jsonFilters[jsonIndex]:
+      self.filterSelector.setToolTip(self.jsonFilters[jsonIndex]["briefdescription"])
 
   def cleanup(self):
     pass
@@ -201,7 +201,6 @@ class SimpleFiltersWidget:
 
     logic.run(self.filterParameters.filter, self.filterParameters.output, *self.filterParameters.inputs)
 
-    print("done")
 
   def onReload(self,moduleName="SimpleFilters"):
     """Generic reload method for any scripted module.
@@ -259,6 +258,7 @@ class SimpleFiltersWidget:
       traceback.print_exc()
       qt.QMessageBox.warning(slicer.util.mainWindow(),
           "Reload and Test", 'Exception!\n\n' + str(e) + "\n\nSee Python Console for Stack Trace")
+
 
 
 #
@@ -641,7 +641,6 @@ class FilterParameters(object):
         continue
 
       coord = [0,0,0]
-      # todo: use GetFiducialWorldCoordinate when available
       annotation.GetFiducialCoordinates(coord)
       coords.append(coord)
 
