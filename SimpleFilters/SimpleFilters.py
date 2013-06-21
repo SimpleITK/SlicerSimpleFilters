@@ -380,6 +380,10 @@ class FilterParameters(object):
   def __del__(self):
     self.destroy()
 
+  def BeautifyCamelCase(self, str):
+    reCamelCase = re.compile('((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))')
+    return reCamelCase.sub(r' \1',str)
+
   def create(self, json):
     if not self.parent:
       raise "no parent"
@@ -602,7 +606,7 @@ class FilterParameters(object):
     elif "detaileddescriptionSet" in memberJSON:
       tip=memberJSON["detaileddescriptionSet"]
 
-    l = qt.QLabel(memberJSON["name"]+": ")
+    l = qt.QLabel(self.BeautifyCamelCase(memberJSON["name"])+": ")
     self.widgets.append(l)
 
     widget.setToolTip(tip)
