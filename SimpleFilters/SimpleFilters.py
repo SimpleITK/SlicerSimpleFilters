@@ -483,7 +483,9 @@ class FilterParameters(object):
 
 
     for member in json["members"]:
-      t = member["type"]
+      w = None
+      if "type" in member:
+        t = member["type"]
 
       if "dim_vec" in member and int(member["dim_vec"]):
         w = self.createVectorWidget(member["name"],t)
@@ -499,9 +501,10 @@ class FilterParameters(object):
         w = self.createIntWidget(member["name"],member["default"],t)
       else:
         sys.stderr.write("Unknown member \"{0}\" of type \"{1}\"\n".format(member["name"],member["type"]))
-        continue
 
-      self.addWidgetWithToolTipAndLabel(w,member)
+      if w:
+        self.addWidgetWithToolTipAndLabel(w,member)
+
 
     # end for each member
 
