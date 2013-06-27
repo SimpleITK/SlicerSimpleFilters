@@ -9,6 +9,7 @@ set(MODULE_PYTHON_SCRIPTS
 file(GLOB SimpleFilters_JSON RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Resources/json/*.json")
 set(MODULE_PYTHON_RESOURCES
   ${SimpleFilters_JSON}
+  "Resources/Icons/Fiducials.png"
   )
 
 #-----------------------------------------------------------------------------
