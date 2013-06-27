@@ -167,10 +167,13 @@ class SimpleFiltersWidget:
   def onSearch(self, searchText):
     # add all the filters listed in the json files
     self.filterSelector.clear()
+    # split text on whitespace of and string search
+    searchTextList = searchText.split()
     for idx,j in enumerate(self.jsonFilters):
-      name = j["name"]
-      if name.lower().find(searchText.lower()) != -1:
-        self.filterSelector.addItem(name,idx)
+      lname = j["name"].lower()
+      # require all elements in list, to add to select. case insensitive
+      if  reduce(lambda x, y: x and (lname.find(y.lower())!=-1), [True]+searchTextList):
+        self.filterSelector.addItem(j["name"],idx)
 
 
   def onFilterSelect(self, selectorIndex):
