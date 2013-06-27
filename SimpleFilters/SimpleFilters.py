@@ -164,6 +164,9 @@ class SimpleFiltersWidget:
     # Add vertical spacer
     self.layout.addStretch(1)
 
+    # Initlial Selection
+    self.filterSelector.currentIndexChanged(self.filterSelector.currentIndex)
+
   def onSearch(self, searchText):
     # add all the filters listed in the json files
     self.filterSelector.clear()
