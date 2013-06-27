@@ -17,7 +17,7 @@ from time import sleep
 
 class SimpleFilters:
   def __init__(self, parent):
-    parent.title = "SimpleFilters" # TODO make this more human readable by adding spaces
+    parent.title = "Simple Filters"
     parent.categories = ["Filtering"]
     parent.dependencies = []
     parent.contributors = ["Bradley Lowekamp (MSC/NLM)"]
@@ -25,6 +25,7 @@ class SimpleFilters:
     This is a meta module which contains interfaces for many Simple ITK image filters.
     """
     parent.acknowledgementText = """
+This work could not have been done without the support of the Slicer Community, the Insight Consortium, or the Insight Toolkit."
 """ # replace with organization, grant and thanks.
     self.parent = parent
 
@@ -186,6 +187,8 @@ class SimpleFiltersWidget:
 
     if "briefdescription" in self.jsonFilters[jsonIndex]:
       self.filterSelector.setToolTip(self.jsonFilters[jsonIndex]["briefdescription"])
+    else:
+      self.filterSelector.setToolTip("")
 
   def cleanup(self):
     pass
@@ -393,10 +396,6 @@ class FilterParameters(object):
   def create(self, json):
     if not self.parent:
       raise "no parent"
-
-    self.frame = qt.QFrame(self.parent)
-    #self.parent.layout().addWidget(self.frame)
-    self.widgets.append(self.frame)
 
     parametersFormLayout = self.parent.layout()
 
@@ -676,13 +675,15 @@ class FilterParameters(object):
     coords = [float(x) for x in widget.coordinates.split(',')]
     exec('self.filter.Set{0}(coords)'.format(name))
 
+
   def prerun(self):
     for f in self.prerun_callbacks:
       f()
 
   def destroy(self):
+
     for w in self.widgets:
-      self.parent.layout().removeWidget(w)
+      #self.parent.layout().removeWidget(w)
       w.deleteLater()
       w.setParent(None)
     self.widgets = []
@@ -710,6 +711,9 @@ class SimpleFiltersTest(unittest.TestCase):
     qt.QTimer.singleShot(msec, self.info.close)
     self.info.exec_()
 
+    # make sure all events are processed before moving on
+    qt.QApplication.flush()
+
   def setUp(self):
     """ Do whatever is needed to reset the state - typically a scene clear will be enough.
     """
@@ -726,8 +730,8 @@ class SimpleFiltersTest(unittest.TestCase):
     # Run through all the loaded filters and get the widget to generate the GUI
     for filterIdx in range(testWidget.filterSelector.count):
       someJSON=slicer.modules.SimpleFiltersWidget.jsonFilters[filterIdx]
-      self.delayDisplay("Testing filter \"{0}\" ({1} of {2}).".format(someJSON["name"], filterIdx, testWidget.filterSelector.count),msec=100 )
       testWidget.filterSelector.setCurrentIndex(filterIdx)
+      self.delayDisplay("Testing filter \"{0}\" ({1} of {2}).".format(someJSON["name"], filterIdx, testWidget.filterSelector.count),msec=100 )
 
     return True
 
