@@ -488,7 +488,57 @@ class FilterParameters(object):
         t = member["type"]
 
       if "dim_vec" in member and int(member["dim_vec"]):
-        w = self.createVectorWidget(member["name"],t)
+        if member["itk_type"].endswith("IndexType") or member["itk_type"].endswith("PointType"):
+          isPoint = member["itk_type"].endswith("PointType")
+
+          fiducialSelector = slicer.qMRMLNodeComboBox()
+          self.widgets.append(fiducialSelector)
+          fiducialSelector.nodeTypes = ( ("vtkMRMLAnnotationFiducialNode"), "" )
+          fiducialSelector.selectNodeUponCreation = True
+          fiducialSelector.addEnabled = False
+          fiducialSelector.removeEnabled = False
+          fiducialSelector.renameEnabled = True
+          fiducialSelector.noneEnabled = False
+          fiducialSelector.showHidden = False
+          fiducialSelector.showChildNodeTypes = True
+          fiducialSelector.setMRMLScene( slicer.mrmlScene )
+          fiducialSelector.setToolTip( "Pick the Fiducial for the Point or Index" )
+
+          fiducialSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node,w=fiducialSelector,name=member["name"],isPt=isPoint:self.onFiducialNode(name,w,isPt))
+          self.prerun_callbacks.append(lambda w=fiducialSelector,name=member["name"],isPt=isPoint:self.onFiducialNode(name,w,isPt))
+
+          w1 = fiducialSelector
+
+          fiducialSelectorLabel = qt.QLabel("{0}: ".format(member["name"]))
+          self.widgets.append(fiducialSelectorLabel)
+
+          pathToIcons = os.path.dirname(os.path.realpath(__file__)) + '/Resources/Icons/'
+          icon = qt.QIcon(pathToIcons+"Fiducials.png")
+
+          toggle = qt.QPushButton(icon, "")
+          toggle.setCheckable(True)
+          toggle.toolTip = "Toggle Fiducial Selection"
+          self.widgets.append(toggle)
+
+          w2 = self.createVectorWidget(member["name"],t)
+
+          hlayout = qt.QHBoxLayout()
+          hlayout.addWidget(fiducialSelector)
+          hlayout.setStretchFactor(fiducialSelector,1)
+          hlayout.addWidget(w2)
+          hlayout.setStretchFactor(w2,1)
+          hlayout.addWidget(toggle)
+          hlayout.setStretchFactor(toggle,0)
+          w1.hide()
+
+          self.widgets.append(hlayout)
+
+          toggle.connect("clicked(bool)", lambda checked,ptW=w2,fidW=w1:self.onToggledPointSelector(checked,ptW,fidW))
+
+          parametersFormLayout.addRow(fiducialSelectorLabel, hlayout)
+
+        else:
+          w = self.createVectorWidget(member["name"],t)
       elif t in ["double", "float"]:
         w = self.createDoubleWidget(member["name"],member["default"])
       elif t == "bool":
@@ -623,6 +673,17 @@ class FilterParameters(object):
     parametersFormLayout = self.parent.layout()
     parametersFormLayout.addRow(l,widget)
 
+  def onToggledPointSelector(self, fidVisible, ptWidget, fiducialWidget):
+    ptWidget.setVisible(False)
+    fiducialWidget.setVisible(False)
+
+    ptWidget.setVisible(not fidVisible)
+    fiducialWidget.setVisible(fidVisible)
+
+    if ptWidget.visible:
+      # Update the coordinate values to envoke the changed signal.
+      # This will update the filter from the widget
+      ptWidget.coordinates = ",".join(str(x) for x in ptWidget.coordinates.split(',') )
 
   def onInputSelect(self, mrmlNode, n):
     self.inputs[n] = mrmlNode
@@ -636,6 +697,24 @@ class FilterParameters(object):
 
   def onOutputSelect(self, mrmlNode):
     self.output = mrmlNode
+
+  def onFiducialNode(self, name, mrmlWidget, isPoint):
+    if not mrmlWidget.visible:
+      return
+    annotationFiducialNode = mrmlWidget.currentNode()
+
+    # point in physical space
+    coord = [0,0,0]
+    annotationFiducialNode.GetFiducialCoordinates(coord)
+
+    # HACK transform from RAS to LPS
+    coord = [-coord[0],-coord[1],coord[2]]
+
+    if not isPoint and len(self.inputs) and self.inputs[0]:
+      imgNodeName = self.inputs[0].GetName()
+      img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNodeName) )
+      coord = img.TransformPhysicalPointToIndex(coord)
+    exec('self.filter.Set{0}(coord)'.format(name))
 
   def onFiducialListNode(self, name, mrmlNode):
     annotationHierarchyNode = mrmlNode
