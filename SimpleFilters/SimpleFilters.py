@@ -49,6 +49,7 @@ This work could not have been done without the support of the Slicer Community, 
 
 class SimpleFiltersWidget:
   def __init__(self, parent = None):
+    import sys
     if not parent:
       self.parent = slicer.qMRMLWidget()
       self.parent.setLayout(qt.QVBoxLayout())
@@ -60,11 +61,8 @@ class SimpleFiltersWidget:
       self.setup()
       self.parent.show()
 
-    pathToJSON = os.path.dirname(os.path.realpath(__file__)) + '/Resources/json/'
-    # need to hit reload to get correct file
-    print("pathToJSON: ",pathToJSON)
-    print(__file__)
-
+    filePath = eval('slicer.modules.%s.path' % "SimpleFilters".lower())
+    pathToJSON = os.path.dirname(filePath) + '/Resources/json/'
     jsonFiles = glob(pathToJSON+"*.json")
 
     self.jsonFilters = []
@@ -77,8 +75,9 @@ class SimpleFiltersWidget:
           self.jsonFilters.append(j)
         else:
           sys.stderr.write("Unknown SimpleITK class \"{0}\".\n".format(j["name"]))
-      except:
-        print "Error while reading $1", fname
+      except Exception as e:
+        sys.stderr.write("Error while reading \"{0}\". Exception: {1}\n".format(fname, e))
+
 
     self.filterParameters = None
 
