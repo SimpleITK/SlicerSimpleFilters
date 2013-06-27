@@ -409,28 +409,16 @@ class FilterParameters(object):
     # input volume selectors
     #
     for n in range(json["number_of_inputs"]):
-      inputSelector = slicer.qMRMLNodeComboBox()
-      self.widgets.append(inputSelector)
-      inputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
-      inputSelector.selectNodeUponCreation = True
-      inputSelector.addEnabled = False
-      inputSelector.removeEnabled = False
-      inputSelector.noneEnabled = False
-      inputSelector.showHidden = False
-      inputSelector.showChildNodeTypes = False
-      inputSelector.setMRMLScene( slicer.mrmlScene )
-      inputSelector.setToolTip( "Pick the input to the algorithm." )
+
+      w = self.createInputWidget(n)
 
       inputSelectorLabel = qt.QLabel("Input Volume: ")
       self.widgets.append(inputSelectorLabel)
 
-      # connect and verify parameters
-      inputSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node,i=n:self.onInputSelect(node,i))
-
       # add to layout after connection
-      parametersFormLayout.addRow(inputSelectorLabel, inputSelector)
+      parametersFormLayout.addRow(inputSelectorLabel, w)
 
-      self.inputs.append(inputSelector.currentNode())
+      self.inputs.append(w.currentNode())
 
     #end for each input
 
@@ -585,6 +573,23 @@ class FilterParameters(object):
     parametersFormLayout.addRow(outputSelectorLabel, outputSelector)
 
     self.output = outputSelector.currentNode()
+
+  def createInputWidget(self,n):
+      inputSelector = slicer.qMRMLNodeComboBox()
+      self.widgets.append(inputSelector)
+      inputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
+      inputSelector.selectNodeUponCreation = True
+      inputSelector.addEnabled = False
+      inputSelector.removeEnabled = False
+      inputSelector.noneEnabled = False
+      inputSelector.showHidden = False
+      inputSelector.showChildNodeTypes = False
+      inputSelector.setMRMLScene( slicer.mrmlScene )
+      inputSelector.setToolTip( "Pick the input to the algorithm." )
+
+      # connect and verify parameters
+      inputSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node,i=n:self.onInputSelect(node,i))
+      return inputSelector
 
   def createVectorWidget(self,name,type):
     m = re.search(r"<([a-zA-Z ]+)>", type)
