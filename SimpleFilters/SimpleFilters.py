@@ -64,6 +64,7 @@ class SimpleFiltersWidget:
     filePath = eval('slicer.modules.%s.path' % "SimpleFilters".lower())
     pathToJSON = os.path.dirname(filePath) + '/Resources/json/'
     jsonFiles = glob(pathToJSON+"*.json")
+    jsonFiles.sort(cmp=lambda x,y: cmp(os.path.basename(x), os.path.basename(y)))
 
     self.jsonFilters = []
 
