@@ -305,13 +305,17 @@ class SimpleFiltersLogic:
     self.main_queue_running = False
     self.thread = threading.Thread()
 
+  def __del__(self):
+    if self.main_queue_running:
+      self.main_queue_stop
+
   def thread_doit(self,filter,*inputImages):
     try:
       img = filter.Execute(*inputImages)
       self.main_queue.put(lambda img=img:self.updateOutput(img))
-      self.main_queue.put(self.main_queue_stop)
     except Exception as e:
       print "Exception:", e
+    finally:
       self.main_queue.put(self.main_queue_stop)
 
   def main_queue_start(self):
