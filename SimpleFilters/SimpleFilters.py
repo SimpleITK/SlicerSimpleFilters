@@ -166,6 +166,17 @@ class SimpleFiltersWidget:
     # Add vertical spacer
     self.layout.addStretch(1)
 
+
+    statusLabel = qt.QLabel("Status: ")
+    self.currentStatusLabel = qt.QLabel("Idle")
+    hlayout = qt.QHBoxLayout()
+    hlayout.addStretch(1)
+    hlayout.addWidget(statusLabel)
+    hlayout.addWidget(self.currentStatusLabel)
+    self.layout.addLayout(hlayout)
+
+
+
     # Initlial Selection
     self.filterSelector.currentIndexChanged(self.filterSelector.currentIndex)
 
@@ -205,12 +216,19 @@ class SimpleFiltersWidget:
     self.filterParameters.prerun()
 
     logic = SimpleFiltersLogic()
-    print("Run the algorithm")
 
     print self.filterParameters.filter
 
+    self.onLogicRunStart()
     logic.run(self.filterParameters.filter, self.filterParameters.output, *self.filterParameters.inputs)
 
+  def onLogicRunStart(self):
+    self.applyButton.setDisabled(True)
+    self.currentStatusLabel.text = "Running"
+
+  def onLogicRunFinished(self):
+    self.applyButton.setDisabled(False)
+    self.currentStatusLabel.text = "Idle"
 
   def onReload(self,moduleName="SimpleFilters"):
     """Generic reload method for any scripted module.
@@ -305,6 +323,7 @@ class SimpleFiltersLogic:
     """End monitoring of main_queue for callables"""
     self.main_queue_running = False
     print "Stopping queue process"
+    slicer.modules.SimpleFiltersWidget.onLogicRunFinished()
 
   def main_queue_process(self):
     """processes the main_queue of callables"""
