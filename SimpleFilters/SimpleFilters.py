@@ -91,6 +91,7 @@ class SimpleFiltersWidget:
     #
     reloadCollapsibleButton = ctk.ctkCollapsibleButton()
     reloadCollapsibleButton.text = "Reload && Test"
+    reloadCollapsibleButton.collapsed = True
     self.layout.addWidget(reloadCollapsibleButton)
     reloadFormLayout = qt.QFormLayout(reloadCollapsibleButton)
 
