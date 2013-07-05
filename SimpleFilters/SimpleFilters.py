@@ -11,6 +11,12 @@ import threading
 import Queue
 from time import sleep
 
+import inspect
+__file__ = inspect.getframeinfo(inspect.currentframe())[0]
+
+ICON_DIR = os.path.dirname(os.path.realpath(__file__)) + '/Resources/Icons/'
+JSON_DIR = os.path.dirname(os.path.realpath(__file__)) + '/Resources/json/'
+
 #
 # SimpleFilters
 #
@@ -28,6 +34,8 @@ class SimpleFilters:
 This work could not have been done without the support of the Slicer Community, the Insight Consortium, or the Insight Toolkit."
 """ # replace with organization, grant and thanks.
     self.parent = parent
+
+    parent.icon = qt.QIcon("%s/ITK.png" % ICON_DIR)
 
     # Add this test to the SelfTest module's list for discovery when the module
     # is created.  Since this module may be discovered before SelfTests itself,
@@ -61,9 +69,7 @@ class SimpleFiltersWidget:
       self.setup()
       self.parent.show()
 
-    filePath = eval('slicer.modules.%s.path' % "SimpleFilters".lower())
-    pathToJSON = os.path.dirname(filePath) + '/Resources/json/'
-    jsonFiles = glob(pathToJSON+"*.json")
+    jsonFiles = glob(JSON_DIR+"*.json")
     jsonFiles.sort(cmp=lambda x,y: cmp(os.path.basename(x), os.path.basename(y)))
 
     self.jsonFilters = []
@@ -513,8 +519,7 @@ class FilterParameters(object):
           fiducialSelectorLabel = qt.QLabel("{0}: ".format(member["name"]))
           self.widgets.append(fiducialSelectorLabel)
 
-          pathToIcons = os.path.dirname(os.path.realpath(__file__)) + '/Resources/Icons/'
-          icon = qt.QIcon(pathToIcons+"Fiducials.png")
+          icon = qt.QIcon(ICON_DIR+"Fiducials.png")
 
           toggle = qt.QPushButton(icon, "")
           toggle.setCheckable(True)
