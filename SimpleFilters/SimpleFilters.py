@@ -57,7 +57,6 @@ This work could not have been done without the support of the Slicer Community, 
 
 class SimpleFiltersWidget:
   def __init__(self, parent = None):
-    import sys
     if not parent:
       self.parent = slicer.qMRMLWidget()
       self.parent.setLayout(qt.QVBoxLayout())
@@ -81,8 +80,10 @@ class SimpleFiltersWidget:
         if j["name"] in dir(sitk):
           self.jsonFilters.append(j)
         else:
+          import sys
           sys.stderr.write("Unknown SimpleITK class \"{0}\".\n".format(j["name"]))
       except Exception as e:
+        import sys
         sys.stderr.write("Error while reading \"{0}\". Exception: {1}\n".format(fname, e))
 
 
@@ -556,6 +557,7 @@ class FilterParameters(object):
                "unsigned int", "int"]:
         w = self.createIntWidget(member["name"],member["default"],t)
       else:
+        import sys
         sys.stderr.write("Unknown member \"{0}\" of type \"{1}\"\n".format(member["name"],member["type"]))
 
       if w:
