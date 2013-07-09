@@ -557,15 +557,15 @@ class FilterParameters(object):
         else:
           w = self.createVectorWidget(member["name"],t)
       elif t in ["double", "float"]:
-        w = self.createDoubleWidget(member["name"],member["default"])
+        w = self.createDoubleWidget(member["name"])
       elif t == "bool":
-        w = self.createBoolWidget(member["name"],member["default"])
+        w = self.createBoolWidget(member["name"])
       elif t in ["uint8_t", "int8_t",
                "uint16_t", "int16_t",
                "uint32_t", "int32_t",
                "uint64_t", "int64_t",
                "unsigned int", "int"]:
-        w = self.createIntWidget(member["name"],member["default"],t)
+        w = self.createIntWidget(member["name"],t)
       else:
         import sys
         sys.stderr.write("Unknown member \"{0}\" of type \"{1}\"\n".format(member["name"],member["type"]))
@@ -642,7 +642,7 @@ class FilterParameters(object):
     w.coordinates = ",".join(str(x) for x in default)
     return w
 
-  def createIntWidget(self,name,default="0",type="int"):
+  def createIntWidget(self,name,type="int"):
 
     w = qt.QSpinBox()
     self.widgets.append(w)
@@ -660,34 +660,31 @@ class FilterParameters(object):
     elif type=="int32_t" or  type=="uint64_t" or type=="int":
       w.setRange(-2147483648,2147483647)
 
-    v = str(default)
-    if v[-1]=='u':
-      v = v[:-1]
-    w.setValue(int(v))
+    exec('default = self.filter.Get{0}()'.format(name)) in globals(), locals()
+    w.setValue(int(default))
     w.connect("valueChanged(int)", lambda val,name=name:self.onScalarChanged(name,val))
     return w
 
-  def createBoolWidget(self,name,default="false"):
+  def createBoolWidget(self,name):
+    exec('default = self.filter.Get{0}()'.format(name)) in globals(), locals()
     w = qt.QCheckBox()
     self.widgets.append(w)
 
-    w.setChecked(default.lower=="true")
+    w.setChecked(default)
 
     w.connect("stateChanged(int)", lambda val,name=name:self.onScalarChanged(name,bool(val)))
 
     return w
 
-  def createDoubleWidget(self,name,default="0.0f"):
+  def createDoubleWidget(self,name):
+    exec('default = self.filter.Get{0}()'.format(name)) in globals(), locals()
     w = qt.QDoubleSpinBox()
     self.widgets.append(w)
 
     w.setRange(-3.40282e+038, 3.40282e+038)
     w.decimals = 5
 
-    v = str(default)
-    if v[-1]=='f':
-      v = v[:-1]
-    w.setValue(float(v))
+    w.setValue(default)
     w.connect("valueChanged(double)", lambda val,name=name:self.onScalarChanged(name,val))
 
     return w
