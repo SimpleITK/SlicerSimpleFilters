@@ -216,7 +216,6 @@ class SimpleFiltersWidget:
     pass
 
   def onSelect(self):
-    #TODO figure out when to enable
     self.applyButton.enabled = True
 
   def onApplyButton(self):
@@ -227,7 +226,15 @@ class SimpleFiltersWidget:
     print self.filterParameters.filter
 
     self.onLogicRunStart()
-    logic.run(self.filterParameters.filter, self.filterParameters.output, *self.filterParameters.inputs)
+
+    try:
+
+      logic.run(self.filterParameters.filter, self.filterParameters.output, *self.filterParameters.inputs)
+
+    except:
+      # if there was an exception during start-up make sure to finish
+      self.onLogicRunFinished()
+      raise
 
   def onLogicRunStart(self):
     self.applyButton.setDisabled(True)
