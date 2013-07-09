@@ -383,6 +383,9 @@ class SimpleFiltersLogic:
 
     inputImages = []
 
+    # ensure everything is updated, redawn etc before we begin processing
+    qt.QApplication.flush()
+
     for i in inputs:
       imgNodeName = i.GetName()
       img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNodeName) )
