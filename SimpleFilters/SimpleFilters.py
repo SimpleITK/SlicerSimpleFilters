@@ -208,7 +208,9 @@ class SimpleFiltersWidget:
     self.filterParameters.create(json)
 
     if "briefdescription" in self.jsonFilters[jsonIndex]:
-      self.filterSelector.setToolTip(self.jsonFilters[jsonIndex]["briefdescription"])
+      tip=self.jsonFilters[jsonIndex]["briefdescription"]
+      tip=tip.rstrip()
+      self.filterSelector.setToolTip(tip)
     else:
       self.filterSelector.setToolTip("")
 
@@ -695,6 +697,9 @@ class FilterParameters(object):
       tip=memberJSON["briefdescriptionSet"]
     elif "detaileddescriptionSet" in memberJSON:
       tip=memberJSON["detaileddescriptionSet"]
+
+    # remove trailing white space
+    tip=tip.rstrip()
 
     l = qt.QLabel(self.BeautifyCamelCase(memberJSON["name"])+": ")
     self.widgets.append(l)
