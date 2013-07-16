@@ -11,17 +11,21 @@ import threading
 import Queue
 from time import sleep
 
-import inspect
-__file__ = inspect.getframeinfo(inspect.currentframe())[0]
-
-ICON_DIR = os.path.dirname(os.path.realpath(__file__)) + '/Resources/Icons/'
-JSON_DIR = os.path.dirname(os.path.realpath(__file__)) + '/Resources/json/'
-
 #
 # SimpleFilters
 #
 
 class SimpleFilters:
+
+  # Use class-level scoped variable for module consants
+  if not __file__.endswith("SimpleFilters.py"):
+    import inspect
+    __file__ = inspect.getframeinfo(inspect.currentframe())[0]
+
+  ICON_DIR = os.path.dirname(os.path.realpath(__file__)) + '/Resources/Icons/'
+  JSON_DIR = os.path.dirname(os.path.realpath(__file__)) + '/Resources/json/'
+
+
   def __init__(self, parent):
     parent.title = "Simple Filters"
     parent.categories = ["Filtering"]
@@ -35,7 +39,7 @@ This work could not have been done without the support of the Slicer Community, 
 """ # replace with organization, grant and thanks.
     self.parent = parent
 
-    parent.icon = qt.QIcon("%s/ITK.png" % ICON_DIR)
+    parent.icon = qt.QIcon("%s/ITK.png" % self.ICON_DIR)
 
     # Add this test to the SelfTest module's list for discovery when the module
     # is created.  Since this module may be discovered before SelfTests itself,
@@ -68,7 +72,7 @@ class SimpleFiltersWidget:
       self.setup()
       self.parent.show()
 
-    jsonFiles = glob(JSON_DIR+"*.json")
+    jsonFiles = glob(SimpleFilters.JSON_DIR+"*.json")
     jsonFiles.sort(cmp=lambda x,y: cmp(os.path.basename(x), os.path.basename(y)))
 
     self.jsonFilters = []
@@ -440,7 +444,7 @@ class FilterParameters(object):
           fiducialSelectorLabel = qt.QLabel("{0}: ".format(member["name"]))
           self.widgets.append(fiducialSelectorLabel)
 
-          icon = qt.QIcon(ICON_DIR+"Fiducials.png")
+          icon = qt.QIcon(SimpleFilters.ICON_DIR+"Fiducials.png")
 
           toggle = qt.QPushButton(icon, "")
           toggle.setCheckable(True)
