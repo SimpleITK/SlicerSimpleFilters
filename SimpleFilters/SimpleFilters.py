@@ -249,7 +249,10 @@ class SimpleFiltersLogic:
       img = filter.Execute(*inputImages)
       self.main_queue.put(lambda img=img:self.updateOutput(img))
     except Exception as e:
-      print "Exception:", e
+      msg = e.message
+      self.main_queue.put(lambda :qt.QMessageBox.critical(slicer.util.mainWindow(),
+                                                          "Exception durring execution of{0}".format(filter.GetName()),
+                                                          msg))
     finally:
       self.main_queue.put(self.main_queue_stop)
 
