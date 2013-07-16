@@ -26,7 +26,7 @@ class SimpleFilters:
     parent.title = "Simple Filters"
     parent.categories = ["Filtering"]
     parent.dependencies = []
-    parent.contributors = ["Bradley Lowekamp (MSC/NLM)"]
+    parent.contributors = ["Bradley Lowekamp (MSC/NLM), Steve Pieper (Isomics), Jean-Christophe Fillion-Robin (Kitware)"]
     parent.helpText = """
     This is a meta module which contains interfaces for many Simple ITK image filters.
     """
