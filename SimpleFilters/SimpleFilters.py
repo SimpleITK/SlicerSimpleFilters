@@ -374,16 +374,9 @@ class FilterParameters(object):
       self.widgets.append(w)
       self.addWidgetWithToolTipAndLabel(w,{"briefdescriptionSet":"Radius of structuring element","name":"KernelRadius"})
 
-      w = qt.QComboBox()
-      self.widgets.append(w)
-      w.addItem("Annulus")
-      w.addItem("Box")
-      w.addItem("Ball")
-      w.addItem("Cross")
-      w.currentIndex = 2
-      w.connect('activated(int)', lambda i:self.filter.SetKernelType(i) )
+      labels=["Annulus","Box","Ball","Cross"]
+      w = self.createEnumWidget("KernelType",labels)
       self.addWidgetWithToolTipAndLabel(w,{"briefdescriptionSet":"Structuring element","name":"Kernel Type"})
-
 
     elif json["template_code_filename"] == "RegionGrowingImageFilter"\
           or json["template_code_filename"] == "FastMarchingImageFilter":
@@ -473,6 +466,50 @@ class FilterParameters(object):
 
         else:
           w = self.createVectorWidget(member["name"],t)
+      elif "enum" in member:
+        w = self.createEnumWidget(member["name"],member["enum"])
+      elif t == "InterpolatorEnum":
+        labels=["Nearest Neighbor",
+                "Linear",
+                "BSpline",
+                "Gaussian",
+                "Label Gaussian",
+                "Hamming Windowed Sinc",
+                "Cosine Windowed Sinc",
+                "Welch Windowed Sinc",
+                "Lanczos Windowed Sinc",
+                "Blackman Windowed Sinc"]
+        values=["sitk.sitkNearestNeighbor",
+                "sitk.sitkLinear",
+                "sitk.sitkBSpline",
+                "sitk.sitkGaussian",
+                "sitk.sitkLabelGaussian",
+                "sitk.sitkHammingWindowedSinc",
+                "sitk.sitkCosineWindowedSinc",
+                "sitk.sitkWelchWindowedSinc",
+                "sitk.sitkLanczosWindowedSinc",
+                "sitk.sitkBlackmanWindowedSinc"]
+
+        w = self.createEnumWidget(member["name"],labels,values)
+        pass
+      elif t == "PixelIDValueEnum":
+        labels=["int8_t",
+                "uint8_t",
+                "int16_t",
+                "uint16_t",
+                "uint32_t",
+                "int32_t",
+                "float",
+                "double"]
+        values=["sitk.sitkInt8",
+                "sitk.sitkUInt8",
+                "sitk.sitkInt16",
+                "sitk.sitkUInt16",
+                "sitk.sitkInt32",
+                "sitk.sitkUInt32",
+                "sitk.sitkFloat32",
+                "sitk.sitkFloat64"]
+        w = self.createEnumWidget(member["name"],labels,values)
       elif t in ["double", "float"]:
         w = self.createDoubleWidget(member["name"])
       elif t == "bool":
@@ -537,6 +574,27 @@ class FilterParameters(object):
       # connect and verify parameters
       inputSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node,i=n:self.onInputSelect(node,i))
       return inputSelector
+
+  def createEnumWidget(self,name,enumList,valueList=None):
+
+    w = qt.QComboBox()
+    self.widgets.append(w)
+
+    exec 'default=self.filter.Get{0}()'.format(name) in globals(), locals()
+
+    if valueList is None:
+      valueList = ["self.filter."+e for e in enumList]
+
+    for e,v in zip(enumList,valueList):
+      w.addItem(e,v)
+
+      # check if current item is default, set if it is
+      exec 'itemValue='+v  in globals(), locals()
+      if itemValue  == default:
+        w.setCurrentIndex(w.count-1)
+
+    w.connect("currentIndexChanged(int)", lambda selectorIndex,n=name,selector=w:self.onEnumChanged(n,selectorIndex,selector))
+    return w
 
   def createVectorWidget(self,name,type):
     m = re.search(r"<([a-zA-Z ]+)>", type)
@@ -700,6 +758,10 @@ class FilterParameters(object):
 
   def onScalarChanged(self, name, val):
     exec('self.filter.Set{0}(val)'.format(name))
+
+  def onEnumChanged(self, name, selectorIndex, selector):
+    data=selector.itemData(selectorIndex)
+    exec('self.filter.Set{0}({1})'.format(name,data))
 
   def onIntVectorChanged(self, name, widget, val):
     coords = [int(x) for x in widget.coordinates.split(',')]
