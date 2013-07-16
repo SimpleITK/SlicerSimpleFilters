@@ -94,33 +94,6 @@ class SimpleFiltersWidget:
     # Instantiate and connect widgets ...
 
     #
-    # Reload and Test area
-    #
-    reloadCollapsibleButton = ctk.ctkCollapsibleButton()
-    reloadCollapsibleButton.text = "Reload && Test"
-    reloadCollapsibleButton.collapsed = True
-    self.layout.addWidget(reloadCollapsibleButton)
-    reloadFormLayout = qt.QFormLayout(reloadCollapsibleButton)
-
-    # reload button
-    # (use this during development, but remove it when delivering
-    #  your module to users)
-    self.reloadButton = qt.QPushButton("Reload")
-    self.reloadButton.toolTip = "Reload this module."
-    self.reloadButton.name = "SimpleFilters Reload"
-    reloadFormLayout.addWidget(self.reloadButton)
-    self.reloadButton.connect('clicked()', self.onReload)
-
-    # reload and test button
-    # (use this during development, but remove it when delivering
-    #  your module to users)
-    self.reloadAndTestButton = qt.QPushButton("Reload and Test")
-    self.reloadAndTestButton.toolTip = "Reload this module and then run the self tests."
-    reloadFormLayout.addWidget(self.reloadAndTestButton)
-    self.reloadAndTestButton.connect('clicked()', self.onReloadAndTest)
-
-
-    #
     # Filters Area
     #
     filtersCollapsibleButton = ctk.ctkCollapsibleButton()
@@ -245,64 +218,6 @@ class SimpleFiltersWidget:
   def onLogicRunFinished(self):
     self.applyButton.setDisabled(False)
     self.currentStatusLabel.text = "Idle"
-
-  def onReload(self,moduleName="SimpleFilters"):
-    """Generic reload method for any scripted module.
-    ModuleWizard will subsitute correct default moduleName.
-    """
-    import imp, sys, os, slicer
-
-    widgetName = moduleName + "Widget"
-
-    # reload the source code
-    # - set source file path
-    # - load the module to the global space
-    filePath = eval('slicer.modules.%s.path' % moduleName.lower())
-    p = os.path.dirname(filePath)
-    if not sys.path.__contains__(p):
-      sys.path.insert(0,p)
-    fp = open(filePath, "r")
-    globals()[moduleName] = imp.load_module(
-        moduleName, fp, filePath, ('.py', 'r', imp.PY_SOURCE))
-    fp.close()
-
-    # rebuild the widget
-    # - find and hide the existing widget
-    # - create a new widget in the existing parent
-    parent = slicer.util.findChildren(name='%s Reload' % moduleName)[0].parent().parent()
-    for child in parent.children():
-      try:
-        child.hide()
-      except AttributeError:
-        pass
-    # Remove spacer items
-    item = parent.layout().itemAt(0)
-    while item:
-      parent.layout().removeItem(item)
-      item = parent.layout().itemAt(0)
-
-    # delete the old widget instance
-    if hasattr(globals()['slicer'].modules, widgetName):
-      getattr(globals()['slicer'].modules, widgetName).cleanup()
-
-    # create new widget inside existing parent
-    globals()[widgetName.lower()] = eval(
-        'globals()["%s"].%s(parent)' % (moduleName, widgetName))
-    globals()[widgetName.lower()].setup()
-    setattr(globals()['slicer'].modules, widgetName, globals()[widgetName.lower()])
-
-  def onReloadAndTest(self,moduleName="SimpleFilters"):
-    try:
-      self.onReload()
-      evalString = 'globals()["%s"].%sTest()' % (moduleName, moduleName)
-      tester = eval(evalString)
-      tester.runTest()
-    except Exception, e:
-      import traceback
-      traceback.print_exc()
-      qt.QMessageBox.warning(slicer.util.mainWindow(),
-          "Reload and Test", 'Exception!\n\n' + str(e) + "\n\nSee Python Console for Stack Trace")
-
 
 
 #
@@ -806,53 +721,3 @@ class FilterParameters(object):
       w.deleteLater()
       w.setParent(None)
     self.widgets = []
-
-
-class SimpleFiltersTest(unittest.TestCase):
-  """
-  This is the test case for your scripted module.
-  """
-
-  def delayDisplay(self,message,msec=1000):
-    """This utility method displays a small dialog and waits.
-    This does two things: 1) it lets the event loop catch up
-    to the state of the test so that rendering and widget updates
-    have all taken place before the test continues and 2) it
-    shows the user/developer/tester the state of the test
-    so that we'll know when it breaks.
-    """
-    print(message)
-    self.info = qt.QDialog()
-    self.infoLayout = qt.QVBoxLayout()
-    self.info.setLayout(self.infoLayout)
-    self.label = qt.QLabel(message,self.info)
-    self.infoLayout.addWidget(self.label)
-    qt.QTimer.singleShot(msec, self.info.close)
-    self.info.exec_()
-
-    # make sure all events are processed before moving on
-    qt.QApplication.flush()
-
-  def setUp(self):
-    """ Do whatever is needed to reset the state - typically a scene clear will be enough.
-    """
-    slicer.mrmlScene.Clear(0)
-
-  def runTest(self):
-    """Run as few or as many tests as needed here.
-    """
-    self.setUp()
-
-
-    testWidget = slicer.modules.SimpleFiltersWidget
-
-    # Run through all the loaded filters and get the widget to generate the GUI
-    for filterIdx in range(testWidget.filterSelector.count):
-      someJSON=slicer.modules.SimpleFiltersWidget.jsonFilters[filterIdx]
-      testWidget.filterSelector.setCurrentIndex(filterIdx)
-      self.delayDisplay("Testing filter \"{0}\" ({1} of {2}).".format(someJSON["name"], filterIdx, testWidget.filterSelector.count),msec=100 )
-
-    return True
-
-  def test_SimpleFilters1(self):
-    pass
