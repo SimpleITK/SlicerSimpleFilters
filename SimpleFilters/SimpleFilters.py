@@ -41,18 +41,6 @@ This work could not have been done without the support of the Slicer Community, 
 
     parent.icon = qt.QIcon("%s/ITK.png" % self.ICON_DIR)
 
-    # Add this test to the SelfTest module's list for discovery when the module
-    # is created.  Since this module may be discovered before SelfTests itself,
-    # create the list if it doesn't already exist.
-    try:
-      slicer.selfTests
-    except AttributeError:
-      slicer.selfTests = {}
-    slicer.selfTests['SimpleFilters'] = self.runTest
-
-  def runTest(self):
-    tester = SimpleFiltersTest()
-    tester.runTest()
 
 
 #
