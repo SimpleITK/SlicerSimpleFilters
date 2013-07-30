@@ -319,6 +319,9 @@ class FilterParameters(object):
   """ This class is for managing the widgets for the parameters for a filter
   """
 
+  # class-scope regular expression to help covert from CamelCase
+  reCamelCase = re.compile('((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))')
+
   def __init__(self, parent=None):
     self.parent = parent
     self.widgets = []
@@ -332,8 +335,7 @@ class FilterParameters(object):
     self.destroy()
 
   def BeautifyCamelCase(self, str):
-    reCamelCase = re.compile('((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))')
-    return reCamelCase.sub(r' \1',str)
+    return self.reCamelCase.sub(r' \1',str)
 
   def create(self, json):
     if not self.parent:
