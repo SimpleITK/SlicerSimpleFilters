@@ -475,6 +475,10 @@ class FilterParameters(object):
           w = self.createVectorWidget(member["name"],t)
       elif "enum" in member:
         w = self.createEnumWidget(member["name"],member["enum"])
+      elif member["name"].endswith("Direction") and "std::vector" in t:
+        # This member name is use for direction cosine matrix for image sources.
+        # We are going to ignore it
+        pass
       elif t == "InterpolatorEnum":
         labels=["Nearest Neighbor",
                 "Linear",
