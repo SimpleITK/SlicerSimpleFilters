@@ -190,7 +190,13 @@ class SimpleFiltersWidget:
 
     logic = SimpleFiltersLogic()
 
-    print self.filterParameters.filter
+    try:
+      print self.filterParameters.filter
+    except TypeError:
+      # Issue SimpleITK-210, printing char pixels as ASCCI not as
+      # numbers, in Slicer's python environment this is causing a
+      # TypeError, which can be ignored
+      pass
 
     self.onLogicRunStart()
 
