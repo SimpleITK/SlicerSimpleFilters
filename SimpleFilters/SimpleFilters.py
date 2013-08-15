@@ -772,7 +772,7 @@ class FilterParameters(object):
     exec('self.filter.Set{0}({1})'.format(name,data))
 
   def onIntVectorChanged(self, name, widget, val):
-    coords = [int(x) for x in widget.coordinates.split(',')]
+    coords = [int(float(x)) for x in widget.coordinates.split(',')]
     exec('self.filter.Set{0}(coords)'.format(name))
 
   def onFloatVectorChanged(self, name, widget, val):
