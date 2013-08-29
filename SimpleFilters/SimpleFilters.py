@@ -391,7 +391,7 @@ class FilterParameters(object):
 
       fiducialSelector = slicer.qMRMLNodeComboBox()
       self.widgets.append(fiducialSelector)
-      fiducialSelector.nodeTypes = ( ("vtkMRMLAnnotationHierarchyNode"), "" )
+      fiducialSelector.nodeTypes = ( "vtkMRMLMarkupsFiducialNode", "vtkMRMLAnnotationHierarchyNode")
       fiducialSelector.addAttribute("vtkMRMLAnnotationHierarchyNode", "MainChildType", "vtkMRMLAnnotationFiducialNode" )
       fiducialSelector.selectNodeUponCreation = True
       fiducialSelector.addEnabled = True
@@ -401,7 +401,7 @@ class FilterParameters(object):
       fiducialSelector.showHidden = False
       fiducialSelector.showChildNodeTypes = True
       fiducialSelector.setMRMLScene( slicer.mrmlScene )
-      fiducialSelector.setToolTip( "Pick the Fiducial node for the seed list." )
+      fiducialSelector.setToolTip( "Pick the Markups node for the seed list." )
 
       fiducialSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node,name=name:self.onFiducialListNode(name,node))
       self.prerun_callbacks.append(lambda w=fiducialSelector,name=name:self.onFiducialListNode(name,w.currentNode()))
@@ -740,18 +740,28 @@ class FilterParameters(object):
     # list of points in physical space
     coords = []
 
-    # get the first in the list
-    for listIndex in range(annotationHierarchyNode.GetNumberOfChildrenNodes()):
-      if annotationHierarchyNode.GetNthChildNode(listIndex) is None:
-        continue
+    if annotationHierarchyNode.GetClassName() == "vtkMRMLMarkupsFiducialNode":
+      # slicer4 Markups node
 
-      annotation = annotationHierarchyNode.GetNthChildNode(listIndex).GetAssociatedNode()
-      if annotation is None:
-        continue
+      for i in range(annotationHierarchyNode.GetNumberOfFiducials()):
+        coord = [0,0,0]
+        annotationHierarchyNode.GetNthFiducialPosition(i, coord)
+        coords.append(coord)
+    else:
+      # slicer4 style hierarchy nodes
 
-      coord = [0,0,0]
-      annotation.GetFiducialCoordinates(coord)
-      coords.append(coord)
+      # get the first in the list
+      for listIndex in range(annotationHierarchyNode.GetNumberOfChildrenNodes()):
+        if annotationHierarchyNode.GetNthChildNode(listIndex) is None:
+          continue
+
+        annotation = annotationHierarchyNode.GetNthChildNode(listIndex).GetAssociatedNode()
+        if annotation is None:
+          continue
+
+        coord = [0,0,0]
+        annotation.GetFiducialCoordinates(coord)
+        coords.append(coord)
 
     if self.inputs[0]:
       imgNodeName = self.inputs[0].GetName()
