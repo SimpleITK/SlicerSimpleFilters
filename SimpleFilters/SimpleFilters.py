@@ -425,7 +425,7 @@ class FilterParameters(object):
 
           fiducialSelector = slicer.qMRMLNodeComboBox()
           self.widgets.append(fiducialSelector)
-          fiducialSelector.nodeTypes = ( ("vtkMRMLAnnotationFiducialNode"), "" )
+          fiducialSelector.nodeTypes = (  "vtkMRMLMarkupsFiducialNode", "vtkMRMLAnnotationFiducialNode" )
           fiducialSelector.selectNodeUponCreation = True
           fiducialSelector.addEnabled = False
           fiducialSelector.removeEnabled = False
@@ -723,11 +723,19 @@ class FilterParameters(object):
 
     # point in physical space
     coord = [0,0,0]
-    annotationFiducialNode.GetFiducialCoordinates(coord)
+
+    if annotationFiducialNode.GetClassName() == "vtkMRMLMarkupsFiducialNode":
+      # slicer4 Markups node
+      if annotationFiducialNode.GetNumberOfFiducials() < 1:
+        return
+      annotationFiducialNode.GetNthFiducialPosition(0, coord)
+    else:
+      annotationFiducialNode.GetFiducialCoordinates(coord)
 
     # HACK transform from RAS to LPS
     coord = [-coord[0],-coord[1],coord[2]]
 
+    # FIXME: we should not need to copy the image
     if not isPoint and len(self.inputs) and self.inputs[0]:
       imgNodeName = self.inputs[0].GetName()
       img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNodeName) )
