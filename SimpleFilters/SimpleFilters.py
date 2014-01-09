@@ -356,7 +356,7 @@ class FilterParameters(object):
     self.outputLabelMap = False
 
     self.outputSelector = None
-    self.OutputLabelMapBox = None
+    self.outputLabelMapBox = None
 
   def __del__(self):
     self.destroy()
@@ -375,6 +375,7 @@ class FilterParameters(object):
 
     self.prerun_callbacks = []
     self.inputs = []
+    self.outputLabelMap = False
 
     #
     # input volume selectors
@@ -749,9 +750,11 @@ class FilterParameters(object):
     self.inputs[n] = mrmlNode
 
     if n == 0 and self.inputs[0]:
-        self.outputLabelMap = mrmlNode.GetLabelMap()
-        imgNodeName = self.inputs[0].GetName()
-        img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNodeName) )
+      # if the input zero is a label assume the output is too, test widgets
+      self.onOutputLabelMapChanged( mrmlNode.GetLabelMap())
+
+      imgNodeName = self.inputs[0].GetName()
+      img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNodeName) )
 
   def onPrimaryInputSelect(self, img):
     pass
