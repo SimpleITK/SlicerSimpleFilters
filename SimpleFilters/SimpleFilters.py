@@ -138,7 +138,9 @@ class SimpleFiltersWidget:
     # Add vertical spacer
     self.layout.addStretch(1)
 
-
+    #
+    # Status and Progress
+    #
     statusLabel = qt.QLabel("Status: ")
     self.currentStatusLabel = qt.QLabel("Idle")
     hlayout = qt.QHBoxLayout()
@@ -202,7 +204,10 @@ class SimpleFiltersWidget:
 
     try:
 
-      logic.run(self.filterParameters.filter, self.filterParameters.output, *self.filterParameters.inputs)
+      logic.run(self.filterParameters.filter,
+                self.filterParameters.output,
+                self.filterParameters.outputLabelMap,
+                *self.filterParameters.inputs)
 
     except:
       # if there was an exception during start-up make sure to finish
@@ -286,11 +291,22 @@ class SimpleFiltersLogic:
 
     node = slicer.util.getNode(self.outputNodeName)
 
-    selectionNode = slicer.app.applicationLogic().GetSelectionNode()
-    selectionNode.SetReferenceActiveVolumeID( node.GetID() )
-    slicer.app.applicationLogic().PropagateVolumeSelection(0)
+    applicationLogic = slicer.app.applicationLogic()
+    selectionNode = applicationLogic.GetSelectionNode()
 
-  def run(self, filter, outputMRMLNode, *inputs):
+    if self.outputLabelMap:
+      # setup as labelMap
+      node.SetLabelMap(True)
+      # set default opacity or lookup-table?
+      selectionNode.SetActiveLabelVolumeID(node.GetID())
+      pass
+    else:
+      selectionNode.SetReferenceActiveVolumeID(node.GetID())
+
+    applicationLogic.PropagateVolumeSelection(0)
+    applicationLogic.FitSliceToAll()
+
+  def run(self, filter, outputMRMLNode, outputLabelMap, *inputs):
     """
     Run the actual algorithm
     """
@@ -312,6 +328,7 @@ class SimpleFiltersLogic:
 
     self.output = None
     self.outputNodeName = outputMRMLNode.GetName()
+    self.outputLabelMap = outputLabelMap
 
     self.thread = threading.Thread( target=lambda f=filter,i=inputImages:self.thread_doit(f,*inputImages))
 
@@ -337,6 +354,7 @@ class FilterParameters(object):
     self.inputs = []
     self.output = None
     self.prerun_callbacks = []
+    self.outputLabelMap = False
 
   def __del__(self):
     self.destroy()
@@ -414,6 +432,9 @@ class FilterParameters(object):
       parametersFormLayout.addRow(fiducialSelectorLabel, fiducialSelector)
 
 
+    #
+    # Iterate over the members in the JSON to generate a GUI
+    #
     for member in json["members"]:
       w = None
       if "type" in member:
@@ -538,6 +559,7 @@ class FilterParameters(object):
 
     # end for each member
 
+
     #
     # output volume selector
     #
@@ -565,6 +587,22 @@ class FilterParameters(object):
     parametersFormLayout.addRow(outputSelectorLabel, outputSelector)
 
     self.output = outputSelector.currentNode()
+
+    #
+    # LabelMap toggle
+    #
+    outputLabelMapLabel = qt.QLabel("LabelMap: ")
+    self.widgets.append(outputLabelMapLabel)
+
+    outputLabelMapBox = qt.QCheckBox()
+    self.widgets.append( outputLabelMapBox)
+    outputLabelMapBox.setToolTip("Output Volume is set as a labelmap")
+    outputLabelMapBox.setChecked(self.outputLabelMap)
+
+    outputLabelMapBox.connect("stateChanged(int)", lambda val:self.onOutputLabelMapChanged(bool(val)))
+     # add to layout after connection
+    parametersFormLayout.addRow(outputLabelMapLabel, outputLabelMapBox)
+
 
   def createInputWidget(self,n):
       inputSelector = slicer.qMRMLNodeComboBox()
@@ -715,6 +753,9 @@ class FilterParameters(object):
 
   def onOutputSelect(self, mrmlNode):
     self.output = mrmlNode
+
+  def onOutputLabelMapChanged(self, v):
+    self.outputLabelMap = v
 
   def onFiducialNode(self, name, mrmlWidget, isPoint):
     if not mrmlWidget.visible:
