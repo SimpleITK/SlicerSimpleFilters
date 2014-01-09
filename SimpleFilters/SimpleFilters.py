@@ -295,11 +295,10 @@ class SimpleFiltersLogic:
     selectionNode = applicationLogic.GetSelectionNode()
 
     if self.outputLabelMap:
-      # setup as labelMap
-      node.SetLabelMap(True)
-      # set default opacity or lookup-table?
-      selectionNode.SetActiveLabelVolumeID(node.GetID())
-      pass
+      volumesLogic = slicer.modules.volumes.logic()
+      volumesLogic.SetVolumeAsLabelMap(node, True)
+
+      selectionNode.SetReferenceActiveLabelVolumeID(node.GetID())
     else:
       selectionNode.SetReferenceActiveVolumeID(node.GetID())
 
@@ -573,7 +572,7 @@ class FilterParameters(object):
     self.outputSelector = slicer.qMRMLNodeComboBox()
     self.widgets.append(self.outputSelector)
     self.outputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
-    self.outputSelector.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap", self.outputLabelMap )
+    self.outputSelector.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap", int(self.outputLabelMap) )
     self.outputSelector.selectNodeUponCreation = True
     self.outputSelector.addEnabled = True
     self.outputSelector.removeEnabled = False
@@ -587,7 +586,6 @@ class FilterParameters(object):
 
     self.outputSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node:self.onOutputSelect(node))
 
-    applicationLogic = slicer.app.applicationLogic()
 
     # add to layout after connection
     parametersFormLayout.addRow(outputSelectorLabel, self.outputSelector)
@@ -751,6 +749,7 @@ class FilterParameters(object):
     self.inputs[n] = mrmlNode
 
     if n == 0 and self.inputs[0]:
+        self.outputLabelMap = mrmlNode.GetLabelMap()
         imgNodeName = self.inputs[0].GetName()
         img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNodeName) )
 
@@ -762,6 +761,8 @@ class FilterParameters(object):
 
   def onOutputLabelMapChanged(self, v):
     self.outputLabelMap = v
+    self.outputLabelMapBox.setChecked(v)
+    self.outputSelector.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap",int(v) )
 
   def onFiducialNode(self, name, mrmlWidget, isPoint):
     if not mrmlWidget.visible:
