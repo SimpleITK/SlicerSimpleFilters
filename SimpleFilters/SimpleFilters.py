@@ -356,6 +356,9 @@ class FilterParameters(object):
     self.prerun_callbacks = []
     self.outputLabelMap = False
 
+    self.outputSelector = None
+    self.OutputLabelMapBox = None
+
   def __del__(self):
     self.destroy()
 
@@ -563,30 +566,33 @@ class FilterParameters(object):
     #
     # output volume selector
     #
-    outputSelector = slicer.qMRMLNodeComboBox()
-    self.widgets.append(outputSelector)
-    outputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
-    outputSelector.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap", 0 )
-    outputSelector.selectNodeUponCreation = True
-    outputSelector.addEnabled = True
-    outputSelector.removeEnabled = False
-    outputSelector.renameEnabled = True
-    outputSelector.noneEnabled = False
-    outputSelector.showHidden = False
-    outputSelector.showChildNodeTypes = False
-    outputSelector.baseName = json["name"]+" Output"
-    outputSelector.setMRMLScene( slicer.mrmlScene )
-    outputSelector.setToolTip( "Pick the output to the algorithm." )
-
     outputSelectorLabel = qt.QLabel("Output Volume: ")
     self.widgets.append(outputSelectorLabel)
 
-    outputSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node:self.onOutputSelect(node))
+
+    self.outputSelector = slicer.qMRMLNodeComboBox()
+    self.widgets.append(self.outputSelector)
+    self.outputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
+    self.outputSelector.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap", self.outputLabelMap )
+    self.outputSelector.selectNodeUponCreation = True
+    self.outputSelector.addEnabled = True
+    self.outputSelector.removeEnabled = False
+    self.outputSelector.renameEnabled = True
+    self.outputSelector.noneEnabled = False
+    self.outputSelector.showHidden = False
+    self.outputSelector.showChildNodeTypes = False
+    self.outputSelector.baseName = json["name"]+" Output"
+    self.outputSelector.setMRMLScene( slicer.mrmlScene )
+    self.outputSelector.setToolTip( "Pick the output to the algorithm." )
+
+    self.outputSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node:self.onOutputSelect(node))
+
+    applicationLogic = slicer.app.applicationLogic()
 
     # add to layout after connection
-    parametersFormLayout.addRow(outputSelectorLabel, outputSelector)
+    parametersFormLayout.addRow(outputSelectorLabel, self.outputSelector)
 
-    self.output = outputSelector.currentNode()
+    self.output = self.outputSelector.currentNode()
 
     #
     # LabelMap toggle
@@ -594,14 +600,14 @@ class FilterParameters(object):
     outputLabelMapLabel = qt.QLabel("LabelMap: ")
     self.widgets.append(outputLabelMapLabel)
 
-    outputLabelMapBox = qt.QCheckBox()
-    self.widgets.append( outputLabelMapBox)
-    outputLabelMapBox.setToolTip("Output Volume is set as a labelmap")
-    outputLabelMapBox.setChecked(self.outputLabelMap)
+    self.outputLabelMapBox = qt.QCheckBox()
+    self.widgets.append(self.outputLabelMapBox)
+    self.outputLabelMapBox.setToolTip("Output Volume is set as a labelmap")
+    self.outputLabelMapBox.setChecked(self.outputLabelMap)
 
-    outputLabelMapBox.connect("stateChanged(int)", lambda val:self.onOutputLabelMapChanged(bool(val)))
+    self.outputLabelMapBox.connect("stateChanged(int)", lambda val:self.onOutputLabelMapChanged(bool(val)))
      # add to layout after connection
-    parametersFormLayout.addRow(outputLabelMapLabel, outputLabelMapBox)
+    parametersFormLayout.addRow(outputLabelMapLabel, self.outputLabelMapBox)
 
 
   def createInputWidget(self,n):
