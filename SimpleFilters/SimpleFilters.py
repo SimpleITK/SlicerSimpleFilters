@@ -124,17 +124,6 @@ class SimpleFiltersWidget:
 
     self.filterParameters = FilterParameters(parametersCollapsibleButton)
 
-    #
-    # Apply Button
-    #
-    self.applyButton = qt.QPushButton("Apply")
-    self.applyButton.toolTip = "Run the algorithm."
-    self.applyButton.enabled = True
-    self.layout.addWidget(self.applyButton)
-
-    # connections
-    self.applyButton.connect('clicked(bool)', self.onApplyButton)
-
     # Add vertical spacer
     self.layout.addStretch(1)
 
@@ -149,7 +138,21 @@ class SimpleFiltersWidget:
     hlayout.addWidget(self.currentStatusLabel)
     self.layout.addLayout(hlayout)
 
+    #
+    # Cancel/Apply Row
+    #
 
+    self.applyButton = qt.QPushButton("Apply")
+    self.applyButton.toolTip = "Run the algorithm."
+    self.applyButton.enabled = True
+
+    hlayout = qt.QHBoxLayout()
+    hlayout.addStretch(1)
+    hlayout.addWidget(self.applyButton)
+    self.layout.addLayout(hlayout)
+
+    # connections
+    self.applyButton.connect('clicked(bool)', self.onApplyButton)
 
     # Initlial Selection
     self.filterSelector.currentIndexChanged(self.filterSelector.currentIndex)
