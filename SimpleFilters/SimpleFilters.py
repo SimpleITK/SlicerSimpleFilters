@@ -154,6 +154,29 @@ class SimpleFiltersWidget:
     # Initlial Selection
     self.filterSelector.currentIndexChanged(self.filterSelector.currentIndex)
 
+
+  def cleanup(self):
+    pass
+
+
+  def printPythonCommand(self):
+    #self.filterParameters.prerun()  # Do this first!
+    printStr = []
+    currentFilter = self.filterParameters.filter
+    varName = currentFilter.__class__.__name__
+    printStr.append('myFilter = {0}()'.format(varName))
+    for key in dir(currentFilter):
+      if key == 'GetName' or key.startswith('GetGlobal'):
+        pass
+      elif key[:3] == 'Get':
+        setAttr = key.replace("Get", "Set", 1)
+        if hasattr(currentFilter, setAttr):
+          value = eval("currentFilter.{0}()".format( key))
+          printStr.append('myFilter.{0}({1})'.format(setAttr, value))
+
+    print "\n".join(printStr)
+
+
   def onSearch(self, searchText):
     # add all the filters listed in the json files
     self.filterSelector.clear()
@@ -181,9 +204,6 @@ class SimpleFiltersWidget:
     else:
       self.filterSelector.setToolTip("")
 
-  def cleanup(self):
-    pass
-
   def onSelect(self):
     self.applyButton.enabled = True
 
@@ -192,15 +212,9 @@ class SimpleFiltersWidget:
 
     logic = SimpleFiltersLogic()
 
-    try:
-      print self.filterParameters.filter
-    except TypeError:
-      # Issue SimpleITK-210, printing char pixels as ASCCI not as
-      # numbers, in Slicer's python environment this is causing a
-      # TypeError, which can be ignored
-      pass
-
     self.onLogicRunStart()
+
+    self.printPythonCommand()
 
     try:
 
