@@ -259,6 +259,11 @@ class SimpleFiltersLogic:
   def __del__(self):
     if self.main_queue_running:
       self.main_queue_stop
+    if self.thread.is_alive():
+      self.thread.join()
+
+  def yieldPythonGIL(self, seconds=0):
+    sleep(seconds)
 
   def thread_doit(self,filter,*inputImages):
     try:
@@ -267,7 +272,7 @@ class SimpleFiltersLogic:
     except Exception as e:
       msg = e.message
       self.main_queue.put(lambda :qt.QMessageBox.critical(slicer.util.mainWindow(),
-                                                          "Exception durring execution of{0}".format(filter.GetName()),
+                                                          "Exception during execution of{0}".format(filter.GetName()),
                                                           msg))
     finally:
       self.main_queue.put(self.main_queue_stop)
@@ -275,31 +280,38 @@ class SimpleFiltersLogic:
   def main_queue_start(self):
     """Begins monitoring of main_queue for callables"""
     self.main_queue_running = True
-    qt.QTimer.singleShot(10, self.main_queue_process)
+    qt.QTimer.singleShot(1, self.main_queue_process)
 
   def main_queue_stop(self):
     """End monitoring of main_queue for callables"""
     self.main_queue_running = False
     print "Stopping queue process"
+    if self.thread.is_alive():
+      self.thread.join()
     slicer.modules.SimpleFiltersWidget.onLogicRunFinished()
 
   def main_queue_process(self):
     """processes the main_queue of callables"""
     try:
-      # this sleep is needed to allow the other thread to aquire the GIL and resume executing
-
-      while not self.main_queue.empty():
-        sleep(0)
-        f = self.main_queue.get_nowait()
-        if callable(f):
-          f()
-
-      sleep(0)
-      if self.main_queue_running:
-        qt.QTimer.singleShot(10, self.main_queue_process)
+      while True:
+        if not self.main_queue.empty():
+          f = self.main_queue.get_nowait()
+          if callable(f):
+            f()
+        else:
+          qt.QApplication.processEvents()
+          # yield the GIL to see if there is pending python commands.
+          self.yieldPythonGIL(.01)
+          if self.main_queue.empty() and not self.main_queue_running:
+            return;
 
     except Exception as e:
-      print e
+      import sys
+      sys.stderr.write("FilterLogic error in main_queue: \"{0}\"".format(e))
+
+      # if there was an error try to resume
+      if not self.main_queue.empty() or self.main_queue_running:
+        self.main_queue_process
 
   def updateOutput(self,img):
 
@@ -328,7 +340,8 @@ class SimpleFiltersLogic:
     """
 
     if self.thread.is_alive():
-      print "already executing"
+      import sys
+      sys.stderr.write("FilterLogic is already executing!")
       return
 
     inputImages = []
