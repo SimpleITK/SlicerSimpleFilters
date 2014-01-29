@@ -141,17 +141,24 @@ class SimpleFiltersWidget:
     #
     # Cancel/Apply Row
     #
+    self.restoreDefaultsButton = qt.QPushButton("Restore Defaults")
+    self.restoreDefaultsButton.toolTip = "Restore the default parameters."
+    self.restoreDefaultsButton.enabled = True
+
 
     self.applyButton = qt.QPushButton("Apply")
     self.applyButton.toolTip = "Run the algorithm."
     self.applyButton.enabled = True
 
     hlayout = qt.QHBoxLayout()
+
+    hlayout.addWidget(self.restoreDefaultsButton)
     hlayout.addStretch(1)
     hlayout.addWidget(self.applyButton)
     self.layout.addLayout(hlayout)
 
     # connections
+    self.restoreDefaultsButton.connect('clicked(bool)', self.onRestoreDefaultsButton)
     self.applyButton.connect('clicked(bool)', self.onApplyButton)
 
     # Initlial Selection
@@ -209,6 +216,10 @@ class SimpleFiltersWidget:
 
   def onSelect(self):
     self.applyButton.enabled = True
+
+  def onRestoreDefaultsButton(self):
+    self.onFilterSelect(self.filterSelector.currentIndex)
+
 
   def onApplyButton(self):
     self.filterParameters.prerun()
