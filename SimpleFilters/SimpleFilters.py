@@ -152,6 +152,9 @@ class SimpleFiltersWidget:
     self.restoreDefaultsButton.toolTip = "Restore the default parameters."
     self.restoreDefaultsButton.enabled = True
 
+    self.cancelButton = qt.QPushButton("Cancel")
+    self.cancelButton.toolTip = "Abort the algorithm."
+    self.cancelButton.enabled = False
 
     self.applyButton = qt.QPushButton("Apply")
     self.applyButton.toolTip = "Run the algorithm."
@@ -161,12 +164,14 @@ class SimpleFiltersWidget:
 
     hlayout.addWidget(self.restoreDefaultsButton)
     hlayout.addStretch(1)
+    hlayout.addWidget(self.cancelButton)
     hlayout.addWidget(self.applyButton)
     self.layout.addLayout(hlayout)
 
     # connections
     self.restoreDefaultsButton.connect('clicked(bool)', self.onRestoreDefaultsButton)
     self.applyButton.connect('clicked(bool)', self.onApplyButton)
+    self.cancelButton.connect('clicked(bool)', self.onCancelButton)
 
     # Initlial Selection
     self.filterSelector.currentIndexChanged(self.filterSelector.currentIndex)
@@ -196,6 +201,7 @@ class SimpleFiltersWidget:
   def onLogicRunStop(self):
       self.applyButton.setEnabled(True)
       self.restoreDefaultsButton.setEnabled(True)
+      self.cancelButton.setEnabled(False)
       self.logic = None
       self.progress.hide()
 
@@ -262,9 +268,15 @@ class SimpleFiltersWidget:
       pass
 
 
+  def onCancelButton(self):
+    self.currentStatusLabel.text = "Aborting"
+    if self.logic:
+      self.logic.abort = True;
+
 
   def onLogicEventStart(self):
     self.currentStatusLabel.text = "Running"
+    self.cancelButton.setDisabled(False)
     self.progress.setValue(0)
     self.progress.show()
 
@@ -272,6 +284,11 @@ class SimpleFiltersWidget:
   def onLogicEventEnd(self):
     self.currentStatusLabel.text = "Completed"
     self.progress.setValue(1000)
+
+
+  def onLogicEventAbort(self):
+    #print "Aborting..."
+    self.currentStatusLabel.text = "Aborted"
 
 
   def onLogicEventProgress(self, progress):
@@ -299,6 +316,7 @@ class SimpleFiltersLogic:
     self.main_queue = Queue.Queue()
     self.main_queue_running = False
     self.thread = threading.Thread()
+    self.abort = False
 
 
   def __del__(self):
@@ -312,6 +330,11 @@ class SimpleFiltersLogic:
     sleep(seconds)
 
 
+  def cmdCheckAbort(self, sitkFilter):
+    if self.abort:
+      sitkFilter.Abort()
+
+
   def cmdStartEvent(self, sitkFilter):
     #print "cmStartEvent"
     widget = slicer.modules.SimpleFiltersWidget
@@ -323,6 +346,7 @@ class SimpleFiltersLogic:
     #print "cmProgressEvent", sitkFilter.GetProgress()
     widget = slicer.modules.SimpleFiltersWidget
     self.main_queue.put(lambda p=sitkFilter.GetProgress(): widget.onLogicEventProgress(p))
+    self.cmdCheckAbort(sitkFilter)
     self.yieldPythonGIL()
 
   def cmdIterationEvent(self, sitkFilter, nIter):
@@ -330,6 +354,13 @@ class SimpleFiltersLogic:
     widget = slicer.modules.SimpleFiltersWidget
     self.main_queue.put(lambda: widget.onLogicEventIteration(nIter))
     ++nIter;
+    self.cmdCheckAbort(sitkFilter)
+    self.yieldPythonGIL()
+
+  def cmdAbortEvent(self, sitkFilter):
+    #print "cmAbortEvent"
+    widget = slicer.modules.SimpleFiltersWidget
+    self.main_queue.put(lambda: widget.onLogicEventAbort())
     self.yieldPythonGIL()
 
   def cmdEndEvent(self):
@@ -346,6 +377,7 @@ class SimpleFiltersLogic:
         sitkFilter.AddCommand(sitk.sitkStartEvent, lambda: self.cmdStartEvent(sitkFilter))
         sitkFilter.AddCommand(sitk.sitkProgressEvent, lambda: self.cmdProgressEvent(sitkFilter))
         sitkFilter.AddCommand(sitk.sitkIterationEvent, lambda: self.cmdIterationEvent(sitkFilter,nIter))
+        sitkFilter.AddCommand(sitk.sitkAbortEvent, lambda: self.cmdAbortEvent(sitkFilter))
         sitkFilter.AddCommand(sitk.sitkEndEvent, lambda: self.cmdEndEvent())
 
       except:
@@ -354,10 +386,12 @@ class SimpleFiltersLogic:
 
       img = sitkFilter.Execute(*inputImages)
 
-      self.main_queue.put(lambda img=img:self.updateOutput(img))
+      if not self.abort:
+        self.main_queue.put(lambda img=img:self.updateOutput(img))
 
     except Exception as e:
       msg = e.message
+      self.abort = True
 
       self.yieldPythonGIL()
       self.main_queue.put(lambda :qt.QMessageBox.critical(slicer.util.mainWindow(),
@@ -445,6 +479,8 @@ class SimpleFiltersLogic:
     # check
     self.outputNodeName = outputMRMLNode.GetName()
     self.outputLabelMap = outputLabelMap
+
+    self.abort = False
 
     self.thread = threading.Thread( target=lambda f=filter,i=inputImages:self.thread_doit(f,*inputImages))
 
