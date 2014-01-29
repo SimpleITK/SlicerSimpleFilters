@@ -80,6 +80,7 @@ class SimpleFiltersWidget:
 
 
     self.filterParameters = None
+    self.logic = None
 
 
   def setup(self):
@@ -138,6 +139,12 @@ class SimpleFiltersWidget:
     hlayout.addWidget(self.currentStatusLabel)
     self.layout.addLayout(hlayout)
 
+    self.progress = qt.QProgressBar()
+    self.progress.setRange(0,1000)
+    self.progress.setValue(0)
+    self.layout.addWidget(self.progress)
+    self.progress.hide()
+
     #
     # Cancel/Apply Row
     #
@@ -186,6 +193,17 @@ class SimpleFiltersWidget:
 
     print "\n".join(printStr)
 
+  def onLogicRunStop(self):
+      self.applyButton.setEnabled(True)
+      self.restoreDefaultsButton.setEnabled(True)
+      self.logic = None
+      self.progress.hide()
+
+
+  def onLogicRunStart(self):
+      self.applyButton.setEnabled(False)
+      self.restoreDefaultsButton.setEnabled(False)
+
 
   def onSearch(self, searchText):
     # add all the filters listed in the json files
@@ -214,41 +232,56 @@ class SimpleFiltersWidget:
     else:
       self.filterSelector.setToolTip("")
 
-  def onSelect(self):
-    self.applyButton.enabled = True
 
   def onRestoreDefaultsButton(self):
     self.onFilterSelect(self.filterSelector.currentIndex)
 
 
   def onApplyButton(self):
-    self.filterParameters.prerun()
-
-    logic = SimpleFiltersLogic()
-
-    self.onLogicRunStart()
-
-    self.printPythonCommand()
-
     try:
 
-      logic.run(self.filterParameters.filter,
-                self.filterParameters.output,
-                self.filterParameters.outputLabelMap,
-                *self.filterParameters.inputs)
+      self.currentStatusLabel.text = "Starting"
+
+      self.filterParameters.prerun()
+
+      self.logic = SimpleFiltersLogic()
+
+      self.printPythonCommand()
+
+      #print "running..."
+      self.logic.run(self.filterParameters.filter,
+                     self.filterParameters.output,
+                     self.filterParameters.outputLabelMap,
+                     *self.filterParameters.inputs)
 
     except:
+      self.currentStatusLabel.text = "Exception"
       # if there was an exception during start-up make sure to finish
-      self.onLogicRunFinished()
-      raise
+      self.onLogicRunStop()
+      # todo print exception
+      pass
 
-  def onLogicRunStart(self):
-    self.applyButton.setDisabled(True)
+
+
+  def onLogicEventStart(self):
     self.currentStatusLabel.text = "Running"
+    self.progress.setValue(0)
+    self.progress.show()
 
-  def onLogicRunFinished(self):
-    self.applyButton.setDisabled(False)
-    self.currentStatusLabel.text = "Idle"
+
+  def onLogicEventEnd(self):
+    self.currentStatusLabel.text = "Completed"
+    self.progress.setValue(1000)
+
+
+  def onLogicEventProgress(self, progress):
+    self.currentStatusLabel.text = "Running ({0:6.5f})".format(progress)
+    self.progress.setValue(progress*1000)
+
+
+  def onLogicEventIteration(self, nIter):
+    print "Iteration " , nIter
+
 
 
 #
@@ -267,54 +300,100 @@ class SimpleFiltersLogic:
     self.main_queue_running = False
     self.thread = threading.Thread()
 
+
   def __del__(self):
     if self.main_queue_running:
       self.main_queue_stop
     if self.thread.is_alive():
       self.thread.join()
 
+
   def yieldPythonGIL(self, seconds=0):
     sleep(seconds)
 
-  def thread_doit(self,filter,*inputImages):
+
+  def cmdStartEvent(self, sitkFilter):
+    #print "cmStartEvent"
+    widget = slicer.modules.SimpleFiltersWidget
+    self.main_queue.put(lambda: widget.onLogicEventStart())
+    self.yieldPythonGIL()
+
+
+  def cmdProgressEvent(self, sitkFilter):
+    #print "cmProgressEvent", sitkFilter.GetProgress()
+    widget = slicer.modules.SimpleFiltersWidget
+    self.main_queue.put(lambda p=sitkFilter.GetProgress(): widget.onLogicEventProgress(p))
+    self.yieldPythonGIL()
+
+  def cmdIterationEvent(self, sitkFilter, nIter):
+    print "cmIterationEvent"
+    widget = slicer.modules.SimpleFiltersWidget
+    self.main_queue.put(lambda: widget.onLogicEventIteration(nIter))
+    ++nIter;
+    self.yieldPythonGIL()
+
+  def cmdEndEvent(self):
+    #print "cmEndEvent"
+    widget = slicer.modules.SimpleFiltersWidget
+    self.main_queue.put(lambda: widget.onLogicEventEnd())
+    self.yieldPythonGIL()
+
+  def thread_doit(self,sitkFilter,*inputImages):
     try:
-      img = filter.Execute(*inputImages)
+
+      nIter = 0
+      try:
+        sitkFilter.AddCommand(sitk.sitkStartEvent, lambda: self.cmdStartEvent(sitkFilter))
+        sitkFilter.AddCommand(sitk.sitkProgressEvent, lambda: self.cmdProgressEvent(sitkFilter))
+        sitkFilter.AddCommand(sitk.sitkIterationEvent, lambda: self.cmdIterationEvent(sitkFilter,nIter))
+        sitkFilter.AddCommand(sitk.sitkEndEvent, lambda: self.cmdEndEvent())
+
+      except:
+        import sys
+        print "Unexpected error:", sys.exc_info()[0]
+
+      img = sitkFilter.Execute(*inputImages)
+
       self.main_queue.put(lambda img=img:self.updateOutput(img))
+
     except Exception as e:
       msg = e.message
+
+      self.yieldPythonGIL()
       self.main_queue.put(lambda :qt.QMessageBox.critical(slicer.util.mainWindow(),
-                                                          "Exception during execution of{0}".format(filter.GetName()),
+                                                          "Exception during execution of {0}".format(sitkFilter.GetName()),
                                                           msg))
     finally:
+      # this filter is persistent, remove commands
+      sitkFilter.RemoveAllCommands()
       self.main_queue.put(self.main_queue_stop)
 
   def main_queue_start(self):
     """Begins monitoring of main_queue for callables"""
     self.main_queue_running = True
-    qt.QTimer.singleShot(1, self.main_queue_process)
+    slicer.modules.SimpleFiltersWidget.onLogicRunStart()
+    qt.QTimer.singleShot(0, self.main_queue_process)
 
   def main_queue_stop(self):
     """End monitoring of main_queue for callables"""
     self.main_queue_running = False
-    print "Stopping queue process"
     if self.thread.is_alive():
       self.thread.join()
-    slicer.modules.SimpleFiltersWidget.onLogicRunFinished()
+    slicer.modules.SimpleFiltersWidget.onLogicRunStop()
 
   def main_queue_process(self):
     """processes the main_queue of callables"""
     try:
-      while True:
-        if not self.main_queue.empty():
-          f = self.main_queue.get_nowait()
-          if callable(f):
-            f()
-        else:
-          qt.QApplication.processEvents()
-          # yield the GIL to see if there is pending python commands.
-          self.yieldPythonGIL(.01)
-          if self.main_queue.empty() and not self.main_queue_running:
-            return;
+      while not self.main_queue.empty():
+        f = self.main_queue.get_nowait()
+        if callable(f):
+          f()
+
+      if self.main_queue_running:
+        # Yield the GIL to allow other thread to do some python work.
+        # This is needed since pyQt doesn't yield the python GIL
+        self.yieldPythonGIL(.01)
+        qt.QTimer.singleShot(0, self.main_queue_process)
 
     except Exception as e:
       import sys
@@ -322,7 +401,7 @@ class SimpleFiltersLogic:
 
       # if there was an error try to resume
       if not self.main_queue.empty() or self.main_queue_running:
-        self.main_queue_process
+        qt.QTimer.singleShot(0, self.main_queue_process)
 
   def updateOutput(self,img):
 
@@ -357,16 +436,13 @@ class SimpleFiltersLogic:
 
     inputImages = []
 
-    # ensure everything is updated, redawn etc before we begin processing
-    qt.QApplication.processEvents(qt.QEventLoop.ExcludeUserInputEvents)
-    qt.QApplication.flush()
-
     for i in inputs:
       imgNodeName = i.GetName()
       img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNodeName) )
       inputImages.append(img)
 
     self.output = None
+    # check
     self.outputNodeName = outputMRMLNode.GetName()
     self.outputLabelMap = outputLabelMap
 
