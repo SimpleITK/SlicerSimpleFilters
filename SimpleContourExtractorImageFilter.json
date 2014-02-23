@@ -6,7 +6,6 @@
   "doc" : "",
   "pixel_types" : "BasicPixelIDTypeList",
   "output_pixel_type" : "uint8_t",
-  "public_declarations" : "Self &SetRadius( unsigned int r ) { this->m_Radius = std::vector<unsigned int>(3, r ); return *this; }",
   "members" : [
     {
       "name" : "InputForegroundValue",
@@ -14,9 +13,9 @@
       "default" : "1.0",
       "pixeltype" : "Input",
       "briefdescriptionSet" : "",
-      "detaileddescriptionSet" : "Set the foreground value used in order to identify a foreground pixel in the input image.\n",
+      "detaileddescriptionSet" : "Set the foreground value used in order to identify a foreground pixel in the input image.",
       "briefdescriptionGet" : "",
-      "detaileddescriptionGet" : "Get the foreground value used in order to identify a foreground pixel in the input image.\n"
+      "detaileddescriptionGet" : "Get the foreground value used in order to identify a foreground pixel in the input image."
     },
     {
       "name" : "InputBackgroundValue",
@@ -24,15 +23,16 @@
       "default" : "0.0",
       "pixeltype" : "Input",
       "briefdescriptionSet" : "",
-      "detaileddescriptionSet" : "Set the background value used in order to identify a background pixel in the input image.\n",
+      "detaileddescriptionSet" : "Set the background value used in order to identify a background pixel in the input image.",
       "briefdescriptionGet" : "",
-      "detaileddescriptionGet" : "Get the background value used in order to identify a background pixel in the input image.\n"
+      "detaileddescriptionGet" : "Get the background value used in order to identify a background pixel in the input image."
     },
     {
       "name" : "Radius",
-      "type" : "std::vector<unsigned int>",
+      "type" : "unsigned int",
       "default" : "std::vector<unsigned int>(3, 1)",
       "dim_vec" : 1,
+      "set_as_scalar" : 1,
       "doc" : "",
       "itk_type" : "typename FilterType::RadiusType"
     },
@@ -42,9 +42,9 @@
       "default" : "1.0",
       "pixeltype" : "Output",
       "briefdescriptionSet" : "",
-      "detaileddescriptionSet" : "Set the foreground value used in order to identify a foreground pixel in the output image.\n",
+      "detaileddescriptionSet" : "Set the foreground value used in order to identify a foreground pixel in the output image.",
       "briefdescriptionGet" : "",
-      "detaileddescriptionGet" : "Get the foreground value used in order to identify a foreground pixel in the output image.\n"
+      "detaileddescriptionGet" : "Get the foreground value used in order to identify a foreground pixel in the output image."
     },
     {
       "name" : "OutputBackgroundValue",
@@ -52,9 +52,9 @@
       "default" : "0.0",
       "pixeltype" : "Output",
       "briefdescriptionSet" : "",
-      "detaileddescriptionSet" : "Set the background value used in order to identify a background pixel in the output image.\n",
+      "detaileddescriptionSet" : "Set the background value used in order to identify a background pixel in the output image.",
       "briefdescriptionGet" : "",
-      "detaileddescriptionGet" : "Get the background value used in order to identify a background pixel in the output image.\n"
+      "detaileddescriptionGet" : "Get the background value used in order to identify a background pixel in the output image."
     }
   ],
   "tests" : [
@@ -87,6 +87,6 @@
       ]
     }
   ],
-  "briefdescription" : "Computes an image of contours which will be the contour of the first image.\n",
-  "detaileddescription" : "A pixel of the source image is considered to belong to the contour if its pixel value is equal to the input foreground value and it has in its neighborhood at least one pixel which its pixel value is equal to the input background value. The output image will have pixels which will be set to the output foreground value if they belong to the contour, otherwise they will be set to the ouput background value.\nThe neighborhood \"radius\" is set thanks to the radius params.\n\\see  Image\n\\see \n\\see  Neighborhood\n\\see \n\\see  NeighborhoodOperator\n\\see \n\\see  NeighborhoodIterator\n\n"
+  "briefdescription" : "Computes an image of contours which will be the contour of the first image.",
+  "detaileddescription" : "A pixel of the source image is considered to belong to the contour if its pixel value is equal to the input foreground value and it has in its neighborhood at least one pixel which its pixel value is equal to the input background value. The output image will have pixels which will be set to the output foreground value if they belong to the contour, otherwise they will be set to the ouput background value.\n\nThe neighborhood \"radius\" is set thanks to the radius params.\n\n\\see  Image\n\\see \n\\see  Neighborhood\n\\see \n\\see  NeighborhoodOperator\n\\see \n\\see  NeighborhoodIterator"
 }
