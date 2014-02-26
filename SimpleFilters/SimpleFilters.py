@@ -552,8 +552,15 @@ class FilterParameters(object):
       self.widgets.append(w)
       self.addWidgetWithToolTipAndLabel(w,{"briefdescriptionSet":"Radius of structuring element","name":"KernelRadius"})
 
-      labels=["Annulus","Box","Ball","Cross"]
-      w = self.createEnumWidget("KernelType",labels)
+      labels=["Annulus",
+              "Box",
+              "Ball",
+              "Cross"]
+      values=["sitk.sitkAnnulus",
+              "sitk.sitkBox",
+              "sitk.sitkBall",
+              "sitk.sitkCross"]
+      w = self.createEnumWidget("KernelType",labels,values)
       self.addWidgetWithToolTipAndLabel(w,{"briefdescriptionSet":"Structuring element","name":"Kernel Type"})
 
     elif json["template_code_filename"] == "RegionGrowingImageFilter"\
