@@ -25,6 +25,11 @@ then
     echo this script
     exit 1
 fi
+if [ $(git show-branch update-sitk &> /dev/null) -eq 0 ]
+then
+    echo There is an existing update-sitk branch which should be removed.
+    exit 1
+fi
 #
 # The origin has a branch "sitk-upstream" which contains imported json
 # files as a subtree.
