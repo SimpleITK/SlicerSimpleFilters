@@ -15,20 +15,20 @@
       "name" : "OutputPixelType",
       "type" : "PixelIDValueEnum",
       "default" : "itk::simple::sitkFloat32",
-      "no_print" : "1",
       "custom_itk_cast" : ""
     },
     {
       "name" : "Size",
-      "type" : "std::vector<unsigned int>",
+      "type" : "unsigned int",
       "dim_vec" : 1,
       "default" : "std::vector<unsigned int>(3, 64)",
       "itk_type" : "typename FilterType::SizeType"
     },
     {
       "name" : "Sigma",
-      "type" : "std::vector<double>",
+      "type" : "double",
       "dim_vec" : 1,
+      "set_as_scalar" : 1,
       "default" : "std::vector<double>(3, 0.5)",
       "itk_type" : "typename FilterType::ArrayType",
       "briefdescriptionSet" : "",
@@ -38,7 +38,7 @@
     },
     {
       "name" : "GridSpacing",
-      "type" : "std::vector<double>",
+      "type" : "double",
       "dim_vec" : 1,
       "default" : "std::vector<double>(3, 4.0)",
       "itk_type" : "typename FilterType::ArrayType",
@@ -49,7 +49,7 @@
     },
     {
       "name" : "GridOffset",
-      "type" : "std::vector<double>",
+      "type" : "double",
       "dim_vec" : 1,
       "default" : "std::vector<double>(3, 0.0)",
       "itk_type" : "typename FilterType::ArrayType",
@@ -69,14 +69,14 @@
     },
     {
       "name" : "Origin",
-      "type" : "std::vector<double>",
+      "type" : "double",
       "dim_vec" : 1,
       "default" : "std::vector<double>(3, 0.0)",
       "itk_type" : "typename FilterType::PointType"
     },
     {
       "name" : "Spacing",
-      "type" : "std::vector<double>",
+      "type" : "double",
       "dim_vec" : 1,
       "default" : "std::vector<double>(3, 1.0)",
       "itk_type" : "typename FilterType::SpacingType"
@@ -98,6 +98,6 @@
       "inputs" : []
     }
   ],
-  "briefdescription" : "Generate an n-dimensional image of a grid.\n",
-  "detaileddescription" : " GridImageSourcegenerates an image of a grid. From the abstract... \"Certain classes of images find disparate use amongst members of the ITK community for such purposes as visualization, simulation, testing, etc. Currently there exists two derived classes from the ImageSourceclass used for generating specific images for various applications, viz. RandomImageSourceand GaussianImageSource. We propose to add to this set with the class GridImageSourcewhich, obviously enough, produces a grid image. Such images are useful for visualizing deformation when used in conjunction with the WarpImageFilter, simulating magnetic resonance tagging images, or creating optical illusions with which to amaze your friends.\"\nThe output image may be of any dimension.\n\\author Tustison N., Avants B., Gee J. University of Pennsylvania\nThis implementation was taken from the Insight Journal paper:http://hdl.handle.net/1926/475\n"
+  "briefdescription" : "Generate an n-dimensional image of a grid.",
+  "detaileddescription" : "GridImageSourcegenerates an image of a grid. From the abstract... \"Certain classes of images find disparate use amongst members of the ITK community for such purposes as visualization, simulation, testing, etc. Currently there exists two derived classes from the ImageSourceclass used for generating specific images for various applications, viz. RandomImageSourceand GaussianImageSource. We propose to add to this set with the class GridImageSourcewhich, obviously enough, produces a grid image. Such images are useful for visualizing deformation when used in conjunction with the WarpImageFilter, simulating magnetic resonance tagging images, or creating optical illusions with which to amaze your friends.\"\n\nThe output image may be of any dimension.\n\n\\author Tustison N., Avants B., Gee J. University of Pennsylvania\n\nThis implementation was taken from the Insight Journal paper:http://hdl.handle.net/1926/475"
 }
