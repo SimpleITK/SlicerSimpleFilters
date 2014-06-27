@@ -31,11 +31,28 @@ class SimpleFilters:
     parent.categories = ["Filtering"]
     parent.dependencies = []
     parent.contributors = ["Bradley Lowekamp (MSC/NLM), Steve Pieper (Isomics), Jean-Christophe Fillion-Robin (Kitware)"]
-    parent.helpText = """
-    This is a meta module which contains interfaces for many Simple ITK image filters.
-    """
+    parent.helpText = \
+"""
+This modules provides a basic interface to 250 image filters from the
+Insight Toolkit. It provides access to algorithms such as binary
+morphology, grayscale morphology, region growing, smoothing, denosing,
+distance fields, FFTs, convolutions, automatic thresholding, intensity
+math and many advanced algorithms.
+<br /><br />
+
+Most algorithms which take multiple input images expect the inputs to
+have the same physical locations (spacing, origin, orientation and
+largest possible region), and be the same pixel type.
+<br /><br />
+
+For general information about the module see the <a href=\"{0}/Documentation/Nightly/Modules/SimpleFilters\">online documentation</a>.
+<br /><br />
+
+For detailed information about a specific filter please consult the <a href=\"http://www.itk.org/Doxygen/html/\">Insight Toolkit Doxygen</a>.
+ """.format(parent.slicerWikiUrl, slicer.app.majorVersion, slicer.app.minorVersion)
+
     parent.acknowledgementText = """
-This work could not have been done without the support of the Slicer Community, the Insight Consortium, or the Insight Toolkit."
+The developers would like to thank the support of the Slicer Community, the Insight Toolkit and the ITK Community."
 """ # replace with organization, grant and thanks.
     self.parent = parent
 
