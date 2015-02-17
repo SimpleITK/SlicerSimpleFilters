@@ -7,9 +7,6 @@
   "pixel_types" : "BasicPixelIDTypeList",
   "output_image_type" : "TImageType",
   "filter_type" : "itk::GaussianImageSource<OutputImageType>",
-  "include_files" : [
-    "sitkDirectionConvert.hxx"
-  ],
   "members" : [
     {
       "name" : "OutputPixelType",
@@ -76,7 +73,7 @@
       "type" : "std::vector<double>",
       "default" : "std::vector<double>()",
       "doc" : "Passing a zero sized array, defaults to identiy matrix. The size of the array must exactly match the direction matrix for the dimension of the image.",
-      "custom_itk_cast" : "filter->SetDirection( VectorToITKDirection<typename FilterType::DirectionType>( this->m_Direction ) );"
+      "custom_itk_cast" : "filter->SetDirection( sitkSTLToITKDirection<typename FilterType::DirectionType>( this->m_Direction ) );"
     }
   ],
   "tests" : [
@@ -89,5 +86,5 @@
     }
   ],
   "briefdescription" : "Generate an n-dimensional image of a Gaussian.",
-  "detaileddescription" : "GaussianImageSourcegenerates an image of a Gaussian. m_Normalized determines whether or not the Gaussian is normalized (whether or not the sum over infinite space is 1.0) When creating an image, it is preferable tonotnormalize the Gaussian m_Scale scales the output of the Gaussian to span a range larger than 0->1, and is typically set to the maximum value of the output data type (for instance, 255 for uchars)\n\nThe output image may be of any dimension."
+  "detaileddescription" : "GaussianImageSource generates an image of a Gaussian. m_Normalized determines whether or not the Gaussian is normalized (whether or not the sum over infinite space is 1.0) When creating an image, it is preferable tonotnormalize the Gaussian m_Scale scales the output of the Gaussian to span a range larger than 0->1, and is typically set to the maximum value of the output data type (for instance, 255 for uchars)\n\nThe output image may be of any dimension."
 }
