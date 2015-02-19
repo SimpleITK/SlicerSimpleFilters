@@ -1,6 +1,7 @@
 {
   "name" : "AbsImageFilter",
   "template_code_filename" : "ImageFilter",
+  "template_test_filename" : "ImageFilter",
   "number_of_inputs" : 1,
   "doc" : "Compute the voxel-wise absolute value of an image",
   "pixel_types" : "BasicPixelIDTypeList",
@@ -27,5 +28,5 @@
     }
   ],
   "briefdescription" : "Computes the absolute value of each pixel.",
-  "detaileddescription" : "vnl_math_abs() is used to perform the computation.\n\n\\par Wiki Examples:\n\n\\li All Examples\n\n\\li Compute the absolute value of an image"
+  "detaileddescription" : "vnl_math_abs() is used to perform the computation.\n\n\\par Wiki Examples:\n\n\\li All Examples \n\n\\li Compute the absolute value of an image"
 }

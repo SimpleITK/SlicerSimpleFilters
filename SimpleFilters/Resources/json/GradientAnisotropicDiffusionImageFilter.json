@@ -74,13 +74,8 @@
         },
         {
           "parameter" : "NumberOfIterations",
-          "value" : "10u",
-          "lua_value" : "10",
-          "python_value" : "10",
-          "ruby_value" : "10",
-          "java_value" : "10",
-          "tcl_value" : "10",
-          "R_value" : "10"
+          "cxx_value" : "10u",
+          "value" : "10"
         }
       ],
       "tolerance" : 0,
@@ -91,5 +86,5 @@
     }
   ],
   "briefdescription" : "",
-  "detaileddescription" : "This filter performs anisotropic diffusion on a scalar itk::Imageusing the classic Perona-Malik, gradient magnitude based equation implemented in itkGradientNDAnisotropicDiffusionFunction. For detailed information on anisotropic diffusion, see itkAnisotropicDiffusionFunction and itkGradientNDAnisotropicDiffusionFunction.\n\n\\par Inputs and Outputs\nThe input to this filter should be a scalar itk::Imageof any dimensionality. The output image will be a diffused copy of the input.\n\n\\par Parameters\nPlease see the description of parameters given in itkAnisotropicDiffusionImageFilter.\n\n\\see  AnisotropicDiffusionImageFilter\n\\see \n\\see  AnisotropicDiffusionFunction\n\\see \n\\see GradientAnisotropicDiffusionFunction"
+  "detaileddescription" : "This filter performs anisotropic diffusion on a scalar itk::Image using the classic Perona-Malik, gradient magnitude based equation implemented in itkGradientNDAnisotropicDiffusionFunction. For detailed information on anisotropic diffusion, see itkAnisotropicDiffusionFunction and itkGradientNDAnisotropicDiffusionFunction.\n\n\\par Inputs and Outputs\nThe input to this filter should be a scalar itk::Image of any dimensionality. The output image will be a diffused copy of the input.\n\n\\par Parameters\nPlease see the description of parameters given in itkAnisotropicDiffusionImageFilter.\n\n\\see AnisotropicDiffusionImageFilter \n\\see \n\\see AnisotropicDiffusionFunction \n\\see \n\\see GradientAnisotropicDiffusionFunction"
 }
