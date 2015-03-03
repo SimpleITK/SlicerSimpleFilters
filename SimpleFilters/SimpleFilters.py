@@ -279,10 +279,18 @@ class SimpleFiltersWidget:
 
     except:
       self.currentStatusLabel.text = "Exception"
+
+      import sys
+      msg = sys.exc_info()[0]
+
       # if there was an exception during start-up make sure to finish
       self.onLogicRunStop()
-      # todo print exception
-      pass
+
+
+      qt.QMessageBox.critical(slicer.util.mainWindow(),
+                              "Exception before execution of {0}".format(self.filterParameters.filter.GetName()),
+                              msg)
+
 
 
   def onCancelButton(self):
@@ -488,7 +496,11 @@ class SimpleFiltersLogic:
     inputImages = []
 
     for i in inputs:
+      if i is None:
+        break
+
       imgNodeName = i.GetName()
+
       img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNodeName) )
       inputImages.append(img)
 
@@ -550,19 +562,49 @@ class FilterParameters(object):
     #
     # input volume selectors
     #
-    for n in range(json["number_of_inputs"]):
+    if "inputs" in json:
 
-      w = self.createInputWidget(n)
+      # have named inputs
+      n=0
+      for input in json["inputs"]:
 
-      inputSelectorLabel = qt.QLabel("Input Volume: ")
-      self.widgets.append(inputSelectorLabel)
+        w = self.createInputWidget(n, noneEnabled=("optional" in input and input["optional"]))
 
-      # add to layout after connection
-      parametersFormLayout.addRow(inputSelectorLabel, w)
+        name = "Input Volume: "
+        if  "name" in input:
+          name = "Input {0}: ".format(input["name"])
+        name = name.replace("Image", "Volume")
 
-      self.inputs.append(w.currentNode())
+        print "adding {1}: {0}".format(name,n)
+        inputSelectorLabel = qt.QLabel(name)
+        self.widgets.append(inputSelectorLabel)
 
-    #end for each input
+        # add to layout after connection
+        parametersFormLayout.addRow(inputSelectorLabel, w)
+
+        self.inputs.append(w.currentNode())
+
+        n+=1
+
+        if "number_of_inputs" in json and json["number_of_inputs"] != 0:
+          import sys
+          sys.stderr.write("Expected \"number_of_inputs\" to be 0 not {0}!".format(json["number_of_inputs"]))
+
+    else:
+
+      for n in range(json["number_of_inputs"]):
+
+        w = self.createInputWidget(n)
+
+        inputSelectorLabel = qt.QLabel("Input Volume: ")
+        self.widgets.append(inputSelectorLabel)
+
+        # add to layout after connection
+        parametersFormLayout.addRow(inputSelectorLabel, w)
+
+        self.inputs.append(w.currentNode())
+
+      #end for each input
 
     if json["template_code_filename"] == "KernelImageFilter":
       w = self.createVectorWidget("KernelRadius","std::vector<uint32_t>")
@@ -808,14 +850,14 @@ class FilterParameters(object):
     parametersFormLayout.addRow(outputLabelMapLabel, self.outputLabelMapBox)
 
 
-  def createInputWidget(self,n):
+  def createInputWidget(self,n, noneEnabled=False):
       inputSelector = slicer.qMRMLNodeComboBox()
       self.widgets.append(inputSelector)
       inputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
       inputSelector.selectNodeUponCreation = True
       inputSelector.addEnabled = False
       inputSelector.removeEnabled = False
-      inputSelector.noneEnabled = False
+      inputSelector.noneEnabled = noneEnabled
       inputSelector.showHidden = False
       inputSelector.showChildNodeTypes = False
       inputSelector.setMRMLScene( slicer.mrmlScene )
