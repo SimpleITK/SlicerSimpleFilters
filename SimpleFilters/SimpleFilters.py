@@ -671,6 +671,28 @@ class FilterParameters(object):
 
         else:
           w = self.createVectorWidget(member["name"],t)
+
+      elif "point_vec" in member:
+
+        fiducialSelector = slicer.qMRMLNodeComboBox()
+        self.widgets.append(fiducialSelector)
+        fiducialSelector.nodeTypes = ( "vtkMRMLMarkupsFiducialNode", "vtkMRMLAnnotationHierarchyNode")
+        fiducialSelector.addAttribute("vtkMRMLAnnotationHierarchyNode", "MainChildType", "vtkMRMLAnnotationFiducialNode" )
+        fiducialSelector.selectNodeUponCreation = True
+        fiducialSelector.addEnabled = True
+        fiducialSelector.removeEnabled = False
+        fiducialSelector.renameEnabled = True
+        fiducialSelector.noneEnabled = False
+        fiducialSelector.showHidden = False
+        fiducialSelector.showChildNodeTypes = True
+        fiducialSelector.setMRMLScene( slicer.mrmlScene )
+        fiducialSelector.setToolTip( "Pick the Markups node for the point list." )
+
+        fiducialSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node,name=member["name"]:self.onFiducialListNode(name,node))
+        self.prerun_callbacks.append(lambda w=fiducialSelector,name=member["name"],:self.onFiducialListNode(name,w.currentNode()))
+
+        w = fiducialSelector
+
       elif "enum" in member:
         w = self.createEnumWidget(member["name"],member["enum"])
       elif member["name"].endswith("Direction") and "std::vector" in t:
