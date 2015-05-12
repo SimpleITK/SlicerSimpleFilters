@@ -541,7 +541,7 @@ class FilterParameters(object):
     self.outputLabelMapBox = None
 
   def __del__(self):
-    self.destroy()
+    self.widgets = []
 
   def BeautifyCamelCase(self, str):
     return self.reCamelCase.sub(r' \1',str)
