@@ -901,6 +901,11 @@ class FilterParameters(object):
       w.minimum=-3.40282e+038
       w.maximum=3.40282e+038
       w.connect("coordinatesChanged(double*)", lambda val,widget=w,name=name:self.onFloatVectorChanged(name,widget,val))
+    elif type == "bool":
+      w.setDecimals(0)
+      w.minimum=0
+      w.maximum=1
+      w.connect("coordinatesChanged(double*)", lambda val,widget=w,name=name:self.onBoolVectorChanged(name,widget,val))
     else:
       w.setDecimals(0)
       w.connect("coordinatesChanged(double*)", lambda val,widget=w,name=name:self.onIntVectorChanged(name,widget,val))
@@ -1080,6 +1085,10 @@ class FilterParameters(object):
   def onEnumChanged(self, name, selectorIndex, selector):
     data=selector.itemData(selectorIndex)
     exec('self.filter.Set{0}({1})'.format(name,data))
+
+  def onBoolVectorChanged(self, name, widget, val):
+    coords = [bool(float(x)) for x in widget.coordinates.split(',')]
+    exec('self.filter.Set{0}(coords)'.format(name))
 
   def onIntVectorChanged(self, name, widget, val):
     coords = [int(float(x)) for x in widget.coordinates.split(',')]
