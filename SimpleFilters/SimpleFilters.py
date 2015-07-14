@@ -473,9 +473,6 @@ class SimpleFiltersLogic:
     selectionNode = applicationLogic.GetSelectionNode()
 
     if self.outputLabelMap:
-      volumesLogic = slicer.modules.volumes.logic()
-      volumesLogic.SetVolumeAsLabelMap(node, True)
-
       selectionNode.SetReferenceActiveLabelVolumeID(node.GetID())
     else:
       selectionNode.SetReferenceActiveVolumeID(node.GetID())
@@ -813,8 +810,10 @@ class FilterParameters(object):
 
     self.outputSelector = slicer.qMRMLNodeComboBox()
     self.widgets.append(self.outputSelector)
-    self.outputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
-    self.outputSelector.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap", int(self.outputLabelMap) )
+    if ( self.outputLabelMap ):
+      self.outputSelector.nodeTypes = ( ("vtkMRMLLabelMapVolumeNode"), "" )
+    else:
+      self.outputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
     self.outputSelector.selectNodeUponCreation = True
     self.outputSelector.addEnabled = True
     self.outputSelector.removeEnabled = False
@@ -1011,7 +1010,10 @@ class FilterParameters(object):
   def onOutputLabelMapChanged(self, v):
     self.outputLabelMap = v
     self.outputLabelMapBox.setChecked(v)
-    self.outputSelector.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap",int(v) )
+    if ( v ):
+      self.outputSelector.nodeTypes = ( ("vtkMRMLLabelMapVolumeNode"), "" )
+    else:
+      self.outputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
 
   def onFiducialNode(self, name, mrmlWidget, isPoint):
     if not mrmlWidget.visible:
