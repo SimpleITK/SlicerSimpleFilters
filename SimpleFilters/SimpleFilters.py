@@ -811,9 +811,9 @@ class FilterParameters(object):
     self.outputSelector = slicer.qMRMLNodeComboBox()
     self.widgets.append(self.outputSelector)
     if ( self.outputLabelMap ):
-      self.outputSelector.nodeTypes = ( ("vtkMRMLLabelMapVolumeNode"), "" )
+      self.outputSelector.nodeTypes = ["vtkMRMLLabelMapVolumeNode"]
     else:
-      self.outputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
+      self.outputSelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
     self.outputSelector.selectNodeUponCreation = True
     self.outputSelector.addEnabled = True
     self.outputSelector.removeEnabled = False
@@ -852,7 +852,7 @@ class FilterParameters(object):
   def createInputWidget(self,n, noneEnabled=False):
       inputSelector = slicer.qMRMLNodeComboBox()
       self.widgets.append(inputSelector)
-      inputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
+      inputSelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
       inputSelector.selectNodeUponCreation = True
       inputSelector.addEnabled = False
       inputSelector.removeEnabled = False
@@ -1011,9 +1011,9 @@ class FilterParameters(object):
     self.outputLabelMap = v
     self.outputLabelMapBox.setChecked(v)
     if ( v ):
-      self.outputSelector.nodeTypes = ( ("vtkMRMLLabelMapVolumeNode"), "" )
+      self.outputSelector.nodeTypes = ["vtkMRMLLabelMapVolumeNode"]
     else:
-      self.outputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
+      self.outputSelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
 
   def onFiducialNode(self, name, mrmlWidget, isPoint):
     if not mrmlWidget.visible:
