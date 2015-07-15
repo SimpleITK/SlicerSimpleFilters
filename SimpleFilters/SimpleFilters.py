@@ -810,10 +810,7 @@ class FilterParameters(object):
 
     self.outputSelector = slicer.qMRMLNodeComboBox()
     self.widgets.append(self.outputSelector)
-    if ( self.outputLabelMap ):
-      self.outputSelector.nodeTypes = ["vtkMRMLLabelMapVolumeNode"]
-    else:
-      self.outputSelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
+    self.outputSelector.nodeTypes = ["vtkMRMLScalarVolumeNode", "vtkMRMLLabelMapVolumeNode"]
     self.outputSelector.selectNodeUponCreation = True
     self.outputSelector.addEnabled = True
     self.outputSelector.removeEnabled = False
@@ -843,6 +840,7 @@ class FilterParameters(object):
     self.widgets.append(self.outputLabelMapBox)
     self.outputLabelMapBox.setToolTip("Output Volume is set as a labelmap")
     self.outputLabelMapBox.setChecked(self.outputLabelMap)
+    self.outputLabelMapBox.setDisabled(True)
 
     self.outputLabelMapBox.connect("stateChanged(int)", lambda val:self.onOutputLabelMapChanged(bool(val)))
      # add to layout after connection
@@ -996,7 +994,7 @@ class FilterParameters(object):
 
     if n == 0 and self.inputs[0]:
       # if the input zero is a label assume the output is too, test widgets
-      self.onOutputLabelMapChanged( mrmlNode.GetLabelMap())
+      self.onOutputLabelMapChanged(mrmlNode.IsA("vtkMRMLLabelMapVolumeNode"))
 
       imgNodeName = self.inputs[0].GetName()
       img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNodeName) )
@@ -1006,14 +1004,11 @@ class FilterParameters(object):
 
   def onOutputSelect(self, mrmlNode):
     self.output = mrmlNode
+    self.onOutputLabelMapChanged(mrmlNode.IsA("vtkMRMLLabelMapVolumeNode"))
 
   def onOutputLabelMapChanged(self, v):
     self.outputLabelMap = v
     self.outputLabelMapBox.setChecked(v)
-    if ( v ):
-      self.outputSelector.nodeTypes = ["vtkMRMLLabelMapVolumeNode"]
-    else:
-      self.outputSelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
 
   def onFiducialNode(self, name, mrmlWidget, isPoint):
     if not mrmlWidget.visible:
