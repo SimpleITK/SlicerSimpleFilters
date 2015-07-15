@@ -992,16 +992,6 @@ class FilterParameters(object):
   def onInputSelect(self, mrmlNode, n):
     self.inputs[n] = mrmlNode
 
-    if n == 0 and self.inputs[0]:
-      # if the input zero is a label assume the output is too, test widgets
-      self.onOutputLabelMapChanged(mrmlNode.IsA("vtkMRMLLabelMapVolumeNode"))
-
-      imgNodeName = self.inputs[0].GetName()
-      img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNodeName) )
-
-  def onPrimaryInputSelect(self, img):
-    pass
-
   def onOutputSelect(self, mrmlNode):
     self.output = mrmlNode
     self.onOutputLabelMapChanged(mrmlNode.IsA("vtkMRMLLabelMapVolumeNode"))
