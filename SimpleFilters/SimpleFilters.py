@@ -852,7 +852,7 @@ class FilterParameters(object):
   def createInputWidget(self,n, noneEnabled=False):
       inputSelector = slicer.qMRMLNodeComboBox()
       self.widgets.append(inputSelector)
-      inputSelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
+      inputSelector.nodeTypes = ["vtkMRMLScalarVolumeNode", "vtkMRMLLabelMapVolumeNode"]
       inputSelector.selectNodeUponCreation = True
       inputSelector.addEnabled = False
       inputSelector.removeEnabled = False
