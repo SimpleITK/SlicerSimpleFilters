@@ -346,7 +346,7 @@ class SimpleFiltersLogic:
 
   def __del__(self):
     if self.main_queue_running:
-      self.main_queue_stop
+      self.main_queue_stop()
     if self.thread.is_alive():
       self.thread.join()
 
