@@ -1,7 +1,5 @@
 import os,sys
 import unittest
-import SimpleITK as sitk
-import sitkUtils
 from __main__ import vtk, qt, ctk, slicer
 from glob import glob
 import json
@@ -10,6 +8,11 @@ import re
 import threading
 import Queue
 from time import sleep
+
+# To avoid the overhead of importing SimpleITK during application
+# startup, the import of SimpleITK is delayed until it is needed.
+sitk = None
+sitkUtils = None
 
 #
 # SimpleFilters
@@ -66,6 +69,14 @@ The developers would like to thank the support of the Slicer Community, the Insi
 
 class SimpleFiltersWidget:
   def __init__(self, parent = None):
+
+    # To avoid the overhead of importing SimpleITK during application
+    # startup, the import of SimpleITK is delayed until it is needed.
+    global sitk
+    import SimpleITK as sitk
+    global sitkUtils
+    import sitkUtils
+
     if not parent:
       self.parent = slicer.qMRMLWidget()
       self.parent.setLayout(qt.QVBoxLayout())
