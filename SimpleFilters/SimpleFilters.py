@@ -538,6 +538,7 @@ class FilterParameters(object):
   def __init__(self, parent=None):
     self.parent = parent
     self.widgets = []
+    self.widgetConnections = []
     self.json = json
     self.filter = None
     self.inputs = []
@@ -549,6 +550,9 @@ class FilterParameters(object):
     self.outputLabelMapBox = None
 
   def __del__(self):
+    for widget, sig in self.widgetConnections:
+      widget.disconnect(sig)
+    self.widgetConnections = []
     self.widgets = []
 
   def BeautifyCamelCase(self, str):
@@ -652,6 +656,7 @@ class FilterParameters(object):
       fiducialSelector.setToolTip( "Pick the Markups node for the seed list." )
 
       fiducialSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node,name=name:self.onFiducialListNode(name,node))
+      self.widgetConnections.append((fiducialSelector, "nodeActivated(vtkMRMLNode*)"))
       self.prerun_callbacks.append(lambda w=fiducialSelector,name=name:self.onFiducialListNode(name,w.currentNode()))
 
       fiducialSelectorLabel = qt.QLabel("{0}: ".format(name))
@@ -688,6 +693,7 @@ class FilterParameters(object):
           fiducialSelector.setToolTip( "Pick the Fiducial for the Point or Index" )
 
           fiducialSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node,w=fiducialSelector,name=member["name"],isPt=isPoint:self.onFiducialNode(name,w,isPt))
+          self.widgetConnections.append((fiducialSelector, "nodeActivated(vtkMRMLNode*)"))
           self.prerun_callbacks.append(lambda w=fiducialSelector,name=member["name"],isPt=isPoint:self.onFiducialNode(name,w,isPt))
 
           w1 = fiducialSelector
@@ -716,6 +722,7 @@ class FilterParameters(object):
           self.widgets.append(hlayout)
 
           toggle.connect("clicked(bool)", lambda checked,ptW=w2,fidW=w1:self.onToggledPointSelector(checked,ptW,fidW))
+          self.widgetConnections.append((toggle, "clicked(bool)"))
 
           parametersFormLayout.addRow(fiducialSelectorLabel, hlayout)
 
@@ -739,6 +746,7 @@ class FilterParameters(object):
         fiducialSelector.setToolTip( "Pick the Markups node for the point list." )
 
         fiducialSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node,name=member["name"]:self.onFiducialListNode(name,node))
+        self.widgetConnections.append((fiducialSelector, "nodeActivated(vtkMRMLNode*)"))
         self.prerun_callbacks.append(lambda w=fiducialSelector,name=member["name"],:self.onFiducialListNode(name,w.currentNode()))
 
         w = fiducialSelector
@@ -834,6 +842,7 @@ class FilterParameters(object):
     self.outputSelector.setToolTip( "Pick the output to the algorithm." )
 
     self.outputSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node:self.onOutputSelect(node))
+    self.widgetConnections.append((self.outputSelector, "nodeActivated(vtkMRMLNode*)"))
 
 
     # add to layout after connection
@@ -854,6 +863,7 @@ class FilterParameters(object):
     self.outputLabelMapBox.setDisabled(True)
 
     self.outputLabelMapBox.connect("stateChanged(int)", lambda val:self.onOutputLabelMapChanged(bool(val)))
+    self.widgetConnections.append((self.outputLabelMapBox, "stateChanged(int)"))
      # add to layout after connection
     parametersFormLayout.addRow(outputLabelMapLabel, self.outputLabelMapBox)
 
@@ -873,6 +883,7 @@ class FilterParameters(object):
 
       # connect and verify parameters
       inputSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node,i=n:self.onInputSelect(node,i))
+      self.widgetConnections.append((inputSelector, "nodeActivated(vtkMRMLNode*)"))
       return inputSelector
 
   def createEnumWidget(self,name,enumList,valueList=None):
@@ -894,6 +905,7 @@ class FilterParameters(object):
         w.setCurrentIndex(w.count-1)
 
     w.connect("currentIndexChanged(int)", lambda selectorIndex,n=name,selector=w:self.onEnumChanged(n,selectorIndex,selector))
+    self.widgetConnections.append((w, "currentIndexChanged(int)"))
     return w
 
   def createVectorWidget(self,name,type):
@@ -917,6 +929,7 @@ class FilterParameters(object):
     else:
       w.setDecimals(0)
       w.connect("coordinatesChanged(double*)", lambda val,widget=w,name=name:self.onIntVectorChanged(name,widget,val))
+    self.widgetConnections.append((w, "coordinatesChanged(double*)"))
 
     exec('default = self.filter.Get{0}()'.format(name)) in globals(), locals()
     w.coordinates = ",".join(str(x) for x in default)
@@ -943,6 +956,7 @@ class FilterParameters(object):
     exec('default = self.filter.Get{0}()'.format(name)) in globals(), locals()
     w.setValue(int(default))
     w.connect("valueChanged(int)", lambda val,name=name:self.onScalarChanged(name,val))
+    self.widgetConnections.append((w, "valueChanged(int)"))
     return w
 
   def createBoolWidget(self,name):
@@ -953,6 +967,7 @@ class FilterParameters(object):
     w.setChecked(default)
 
     w.connect("stateChanged(int)", lambda val,name=name:self.onScalarChanged(name,bool(val)))
+    self.widgetConnections.append((w, "stateChanged(int)"))
 
     return w
 
@@ -966,6 +981,7 @@ class FilterParameters(object):
 
     w.setValue(default)
     w.connect("valueChanged(double)", lambda val,name=name:self.onScalarChanged(name,val))
+    self.widgetConnections.append((w, "valueChanged(double)"))
 
     return w
 
@@ -1102,6 +1118,10 @@ class FilterParameters(object):
       f()
 
   def destroy(self):
+
+    for widget, sig in self.widgetConnections:
+      widget.disconnect(sig)
+    self.widgetConnections = []
 
     for w in self.widgets:
       #self.parent.layout().removeWidget(w)
