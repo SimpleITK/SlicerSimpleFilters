@@ -36,7 +36,10 @@
           "parameter" : "Radius",
           "type" : "unsigned int",
           "dim_vec" : 1,
-          "value" : [2,3]
+          "value" : [
+            2,
+            3
+          ]
         }
       ],
       "inputs" : [
@@ -52,7 +55,11 @@
           "parameter" : "Radius",
           "type" : "unsigned int",
           "dim_vec" : 1,
-          "value" : [3,3,3]
+          "value" : [
+            3,
+            3,
+            3
+          ]
         }
       ],
       "inputs" : [
@@ -61,5 +68,7 @@
     }
   ],
   "briefdescription" : "Implements a fast rectangular mean filter using the accumulator approach.",
-  "detaileddescription" : "This code was contributed in the Insight Journal paper: \"Efficient implementation of kernel filtering\" by Beare R., Lehmann G http://hdl.handle.net/1926/555 http://www.insight-journal.org/browse/publication/160 \n\n\\author Richard Beare"
+  "detaileddescription" : "This code was contributed in the Insight Journal paper: \"Efficient implementation of kernel filtering\" by Beare R., Lehmann G https://hdl.handle.net/1926/555 http://www.insight-journal.org/browse/publication/160 \n\n\\author Richard Beare",
+  "itk_module" : "ITKSmoothing",
+  "itk_group" : "Smoothing"
 }

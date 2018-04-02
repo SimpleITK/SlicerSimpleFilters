@@ -5,7 +5,7 @@
   "number_of_inputs" : 1,
   "pixel_types" : "BasicPixelIDTypeList",
   "vector_pixel_types_by_component" : "VectorPixelIDTypeList",
-  "public_declarations" : "Self &SetExpandFactor( unsigned int e ) { this->m_ExpandFactors = std::vector<unsigned int>(3, e ); return *this; }",
+  "public_declarations" : "SITK_RETURN_SELF_TYPE_HEADER SetExpandFactor( unsigned int e ) { this->m_ExpandFactors = std::vector<unsigned int>(3, e ); return *this; }",
   "include_files" : [
     "sitkCreateInterpolator.hxx"
   ],
@@ -190,5 +190,7 @@
     }
   ],
   "briefdescription" : "Expand the size of an image by an integer factor in each dimension.",
-  "detaileddescription" : "ExpandImageFilter increases the size of an image by an integer factor in each dimension using a interpolation method. The output image size in each dimension is given by:\n\nOutputSize[j] = InputSize[j] * ExpandFactors[j]\n\nThe output values are obtained by interpolating the input image. The default interpolation type used is the LinearInterpolateImageFunction . The user can specify a particular interpolation function via SetInterpolator() . Note that the input interpolator must derive from base class InterpolateImageFunction .\n\nThis filter will produce an output with different pixel spacing that its input image such that:\n\nOutputSpacing[j] = InputSpacing[j] / ExpandFactors[j]\n\nThe filter is templated over the input image type and the output image type.\n\nThis filter is implemented as a multithreaded filter and supports streaming.\n\n\\warning This filter only works for image with scalar pixel types. For vector images use VectorExpandImageFilter .\n\nThis filter assumes that the input and output image has the same number of dimensions.\n\n\\see InterpolateImageFunction \n\\see \n\\see LinearInterpolationImageFunction\n\\see \n\\see VectorExpandImageFilter"
+  "detaileddescription" : "ExpandImageFilter increases the size of an image by an integer factor in each dimension using a interpolation method. The output image size in each dimension is given by:\n\nOutputSize[j] = InputSize[j] * ExpandFactors[j]\n\nThe output values are obtained by interpolating the input image. The default interpolation type used is the LinearInterpolateImageFunction . The user can specify a particular interpolation function via SetInterpolator() . Note that the input interpolator must derive from base class InterpolateImageFunction .\n\nThis filter will produce an output with different pixel spacing that its input image such that:\n\nOutputSpacing[j] = InputSpacing[j] / ExpandFactors[j]\n\nThe filter is templated over the input image type and the output image type.\n\nThis filter is implemented as a multithreaded filter and supports streaming.\n\n\\warning This filter only works for image with scalar pixel types. For vector images use VectorExpandImageFilter .\n\nThis filter assumes that the input and output image has the same number of dimensions.\n\n\\see InterpolateImageFunction \n\n\\see LinearInterpolationImageFunction \n\n\\see VectorExpandImageFilter",
+  "itk_module" : "ITKImageGrid",
+  "itk_group" : "ImageGrid"
 }

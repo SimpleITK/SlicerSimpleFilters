@@ -6,7 +6,7 @@
   "number_of_inputs" : 1,
   "doc" : "Docs",
   "pixel_types" : "IntegerPixelIDTypeList",
-  "filter_type" : "itk::LabelImageToShapeLabelMapFilter<InputImageType>",
+  "filter_type" : "itk::LabelImageToShapeLabelMapFilter<InputImageType, itk::LabelMap< itk::ShapeLabelObject< int64_t, InputImageType::ImageDimension > > >",
   "no_procedure" : true,
   "no_return_image" : true,
   "include_files" : [
@@ -20,9 +20,9 @@
       "doc" : "",
       "pixeltype" : "Output",
       "briefdescriptionSet" : "",
-      "detaileddescriptionSet" : "Set/Get the value used as \"background\" in the output image. Defaults to NumericTraits<PixelType>::NonpositiveMin().",
+      "detaileddescriptionSet" : "Set/Get the value used as \"background\" in the output image. Defaults to NumericTraits<PixelType>::NonpositiveMin() .",
       "briefdescriptionGet" : "",
-      "detaileddescriptionGet" : "Set/Get the value used as \"background\" in the output image. Defaults to NumericTraits<PixelType>::NonpositiveMin()."
+      "detaileddescriptionGet" : "Set/Get the value used as \"background\" in the output image. Defaults to NumericTraits<PixelType>::NonpositiveMin() ."
     },
     {
       "name" : "ComputeFeretDiameter",
@@ -41,13 +41,22 @@
       "detaileddescriptionSet" : "Set/Get whether the perimeter should be computed or not. Default value is false, because of the high computation time required.",
       "briefdescriptionGet" : "",
       "detaileddescriptionGet" : "Set/Get whether the perimeter should be computed or not. Default value is false, because of the high computation time required."
+    },
+    {
+      "name" : "ComputeOrientedBoundingBox",
+      "type" : "bool",
+      "default" : "false",
+      "briefdescriptionSet" : "",
+      "detaileddescriptionSet" : "Set/Get whether the oriented bounding box should be computed or not. Default value is false because of potential memory consumption issues with sparse labels.",
+      "briefdescriptionGet" : "",
+      "detaileddescriptionGet" : "Set/Get whether the oriented bounding box should be computed or not. Default value is false because of potential memory consumption issues with sparse labels."
     }
   ],
   "custom_methods" : [
     {
       "name" : "HasLabel",
       "doc" : "Does the specified label exist? Can only be called after a call a call to Update().",
-      "return_type" : "double",
+      "return_type" : "bool",
       "parameters" : [
         {
           "type" : "int64_t",
@@ -295,13 +304,77 @@
         }
       ],
       "label_map" : true
+    },
+    {
+      "name" : "OrientedBoundingBoxSize",
+      "type" : "std::vector<double>",
+      "no_print" : true,
+      "active" : true,
+      "parameters" : [
+        {
+          "name" : "label",
+          "type" : "int64_t"
+        }
+      ],
+      "custom_cast" : "sitkITKVectorToSTL<double>(value)",
+      "label_map" : true
+    },
+    {
+      "name" : "OrientedBoundingBoxOrigin",
+      "type" : "std::vector<double>",
+      "no_print" : true,
+      "active" : true,
+      "parameters" : [
+        {
+          "name" : "label",
+          "type" : "int64_t"
+        }
+      ],
+      "custom_cast" : "sitkITKVectorToSTL<double>(value)",
+      "label_map" : true
+    },
+    {
+      "name" : "OrientedBoundingBoxDirection",
+      "type" : "std::vector<double>",
+      "no_print" : true,
+      "active" : true,
+      "parameters" : [
+        {
+          "name" : "label",
+          "type" : "int64_t"
+        }
+      ],
+      "custom_cast" : "sitkITKDirectionToSTL(value)",
+      "label_map" : true
+    },
+    {
+      "name" : "OrientedBoundingBoxVertices",
+      "type" : "std::vector<double>",
+      "no_print" : true,
+      "active" : true,
+      "parameters" : [
+        {
+          "name" : "label",
+          "type" : "int64_t"
+        }
+      ],
+      "custom_cast" : "sitkVectorOfITKVectorToSTL<double>(value)",
+      "label_map" : true
     }
   ],
   "tests" : [
     {
       "tag" : "SimpleLabelB",
       "description" : "with defaults ",
-      "settings" : [],
+      "settings" : [
+        {
+          "parameter" : "ComputeOrientedBoundingBox",
+          "type" : "bool",
+          "value" : "true",
+          "python_value" : "True",
+          "R_value" : "TRUE"
+        }
+      ],
       "measurements_results" : [
         {
           "name" : "Elongation",
@@ -404,5 +477,7 @@
     }
   ],
   "briefdescription" : "Converts a label image to a label map and valuates the shape attributes.",
-  "detaileddescription" : "A convenient class that converts a label image to a label map and valuates the shape attribute at once.\n\nThis implementation was taken from the Insight Journal paper:\n\nhttp://hdl.handle.net/1926/584orhttp://www.insight-journal.org/browse/publication/176\n\n\\author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.\n\n\\see  ShapeLabelObject, LabelShapeOpeningImageFilter, LabelStatisticsOpeningImageFilter\n\\par Wiki Examples:\n\n\\li All Examples\n\n\\li Convert an itk::Image consisting of labeled regions to a ShapeLabelMap"
+  "detaileddescription" : "A convenient class that converts a label image to a label map and valuates the shape attribute at once.\n\nThis implementation was taken from the Insight Journal paper:\n\nhttps://hdl.handle.net/1926/584 or http://www.insight-journal.org/browse/publication/176 \n\n\\author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.\n\n\\see ShapeLabelObject , LabelShapeOpeningImageFilter , LabelStatisticsOpeningImageFilter \n\n\\par Wiki Examples:\n\n\\li All Examples \n\n\\li Convert an itk::Image consisting of labeled regions to a ShapeLabelMap",
+  "itk_module" : "ITKLabelMap",
+  "itk_group" : "LabelMap"
 }
