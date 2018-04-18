@@ -89,13 +89,19 @@
           "parameter" : "Seed1",
           "type" : "uint32_t",
           "dim_vec" : 1,
-          "value" : [113,84]
+          "value" : [
+            113,
+            84
+          ]
         },
         {
           "parameter" : "Seed2",
           "type" : "uint32_t",
           "dim_vec" : 1,
-          "value" : [120,99]
+          "value" : [
+            120,
+            99
+          ]
         },
         {
           "parameter" : "Threshold",
@@ -122,5 +128,7 @@
     }
   ],
   "briefdescription" : "Isolate watershed basins using two seeds.",
-  "detaileddescription" : "IsolatedWatershedImageFilter labels pixels with ReplaceValue1 that are in the same watershed basin as Seed1 AND NOT the same as Seed2. The filter adjusts the waterlevel until the two seeds are not in different basins. The user supplies a Watershed threshold. The algorithm uses a binary search to adjust the upper waterlevel, starting at UpperValueLimit. UpperValueLimit defaults to the 1.0."
+  "detaileddescription" : "IsolatedWatershedImageFilter labels pixels with ReplaceValue1 that are in the same watershed basin as Seed1 AND NOT the same as Seed2. The filter adjusts the waterlevel until the two seeds are not in different basins. The user supplies a Watershed threshold. The algorithm uses a binary search to adjust the upper waterlevel, starting at UpperValueLimit. UpperValueLimit defaults to the 1.0.",
+  "itk_module" : "ITKWatersheds",
+  "itk_group" : "Watersheds"
 }

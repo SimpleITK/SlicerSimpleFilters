@@ -44,7 +44,10 @@
           "parameter" : "SourceSize",
           "type" : "unsigned int",
           "dim_vec" : 1,
-          "value" : [200, 150]
+          "value" : [
+            200,
+            150
+          ]
         }
       ],
       "inputs" : [
@@ -61,7 +64,10 @@
           "parameter" : "SourceSize",
           "type" : "unsigned int",
           "dim_vec" : 1,
-          "value" : [179, 240]
+          "value" : [
+            179,
+            240
+          ]
         }
       ],
       "inputs" : [
@@ -78,19 +84,28 @@
           "parameter" : "SourceSize",
           "type" : "unsigned int",
           "dim_vec" : 1,
-          "value" : [20, 15]
+          "value" : [
+            20,
+            15
+          ]
         },
         {
           "parameter" : "SourceIndex",
           "type" : "int",
           "dim_vec" : 1,
-          "value" : [100, 100]
+          "value" : [
+            100,
+            100
+          ]
         },
         {
           "parameter" : "DestinationIndex",
           "type" : "int",
           "dim_vec" : 1,
-          "value" : [100, 100]
+          "value" : [
+            100,
+            100
+          ]
         }
       ],
       "inputs" : [
@@ -100,5 +115,7 @@
     }
   ],
   "briefdescription" : "Paste an image into another image.",
-  "detaileddescription" : "PasteImageFilter allows you to take a section of one image and paste into another image. The SetDestinationIndex() method prescribes where in the first input to start pasting data from the second input. The SetSourceRegion method prescribes the section of the second image to paste into the first. If the output requested region does not include the SourceRegion after it has been repositioned to DestinationIndex, then the output will just be a copy of the input.\n\nThe two inputs and output image will have the same pixel type.\n\n\\par Wiki Examples:\n\n\\li All Examples \n\n\\li Paste a part of one image into another image"
+  "detaileddescription" : "PasteImageFilter allows you to take a section of one image and paste into another image. The SetDestinationIndex() method prescribes where in the first input to start pasting data from the second input. The SetSourceRegion method prescribes the section of the second image to paste into the first. If the output requested region does not include the SourceRegion after it has been repositioned to DestinationIndex, then the output will just be a copy of the input.\n\nThe two inputs and output image will have the same pixel type.\n\n\\par Wiki Examples:\n\n\\li All Examples \n\n\\li Paste a part of one image into another image",
+  "itk_module" : "ITKImageGrid",
+  "itk_group" : "ImageGrid"
 }
