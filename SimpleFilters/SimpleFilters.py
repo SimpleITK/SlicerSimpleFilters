@@ -551,8 +551,6 @@ class FilterParameters(object):
     self.outputLabelMapBox = None
 
   def __del__(self):
-    for widget, sig in self.widgetConnections:
-      widget.disconnect(sig)
     self.widgetConnections = []
     self.widgets = []
 
