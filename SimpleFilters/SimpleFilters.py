@@ -1,3 +1,5 @@
+from __future__ import print_function
+from functools import reduce
 import os,sys
 import unittest
 from __main__ import vtk, qt, ctk, slicer
@@ -6,7 +8,12 @@ import json
 from collections import OrderedDict
 import re
 import threading
-import Queue
+
+try:
+  import queue
+except ImportError:
+  import Queue as queue
+
 from time import sleep
 
 # To avoid the overhead of importing SimpleITK during application
@@ -18,7 +25,7 @@ sitkUtils = None
 # SimpleFilters
 #
 
-class SimpleFilters:
+class SimpleFilters(object):
 
   # Use class-level scoped variable for module consants
   if not __file__.endswith("SimpleFilters.py"):
@@ -67,7 +74,7 @@ The developers would like to thank the support of the Slicer Community, the Insi
 # qSimpleFiltersWidget
 #
 
-class SimpleFiltersWidget:
+class SimpleFiltersWidget(object):
   def __init__(self, parent = None):
 
     # To avoid the overhead of importing SimpleITK during application
@@ -89,6 +96,7 @@ class SimpleFiltersWidget:
       self.parent.show()
 
     jsonFiles = glob(SimpleFilters.JSON_DIR+"*.json")
+    cmp = lambda x, y: (x > y) - (x < y)
     jsonFiles.sort(cmp=lambda x,y: cmp(os.path.basename(x), os.path.basename(y)))
 
     self.jsonFilters = []
@@ -225,7 +233,7 @@ class SimpleFiltersWidget:
           value = eval("currentFilter.{0}()".format( key))
           printStr.append('myFilter.{0}({1})'.format(setAttr, value))
 
-    print "\n".join(printStr)
+    print("\n".join(printStr))
 
   def onLogicRunStop(self):
       self.applyButton.setEnabled(True)
@@ -334,7 +342,7 @@ class SimpleFiltersWidget:
 
 
   def onLogicEventIteration(self, nIter):
-    print "Iteration " , nIter
+    print("Iteration " , nIter)
 
 
 
@@ -342,7 +350,7 @@ class SimpleFiltersWidget:
 # SimpleFiltersLogic
 #
 
-class SimpleFiltersLogic:
+class SimpleFiltersLogic(object):
   """This class should implement all the actual
   computation done by your module.  The interface
   should be such that other python code can import
@@ -350,7 +358,7 @@ class SimpleFiltersLogic:
   requiring an instance of the Widget
   """
   def __init__(self):
-    self.main_queue = Queue.Queue()
+    self.main_queue = queue.Queue()
     self.main_queue_running = False
     self.thread = threading.Thread()
     self.abort = False
@@ -387,7 +395,7 @@ class SimpleFiltersLogic:
     self.yieldPythonGIL()
 
   def cmdIterationEvent(self, sitkFilter, nIter):
-    print "cmIterationEvent"
+    print("cmIterationEvent")
     widget = slicer.modules.SimpleFiltersWidget
     self.main_queue.put(lambda: widget.onLogicEventIteration(nIter))
     ++nIter;
@@ -419,7 +427,7 @@ class SimpleFiltersLogic:
 
       except:
         import sys
-        print "Unexpected error:", sys.exc_info()[0]
+        print("Unexpected error:", sys.exc_info()[0])
 
       img = sitkFilter.Execute(*inputImages)
 
@@ -564,7 +572,7 @@ class FilterParameters(object):
     parametersFormLayout = self.parent.layout()
 
     # You can't use exec in a function that has a subfunction, unless you specify a context.
-    exec( 'self.filter = sitk.{0}()'.format(json["name"]))  in globals(), locals()
+    exec('self.filter = sitk.{0}()'.format(json["name"]), globals(), locals())
 
     self.prerun_callbacks = []
     self.inputs = []
@@ -586,7 +594,7 @@ class FilterParameters(object):
           name = "Input {0}: ".format(input["name"])
         name = name.replace("Image", "Volume")
 
-        print "adding {1}: {0}".format(name,n)
+        print("adding {1}: {0}".format(name,n))
         inputSelectorLabel = qt.QLabel(name)
         self.widgets.append(inputSelectorLabel)
 
@@ -890,7 +898,7 @@ class FilterParameters(object):
     w = qt.QComboBox()
     self.widgets.append(w)
 
-    exec 'default=self.filter.Get{0}()'.format(name) in globals(), locals()
+    exec('default=self.filter.Get{0}()'.format(name), globals(), locals())
 
     if valueList is None:
       valueList = ["self.filter."+e for e in enumList]
@@ -899,7 +907,7 @@ class FilterParameters(object):
       w.addItem(e,v)
 
       # check if current item is default, set if it is
-      exec 'itemValue='+v  in globals(), locals()
+      exec('itemValue='+v, globals(), locals())
       if itemValue  == default:
         w.setCurrentIndex(w.count-1)
 
@@ -930,7 +938,7 @@ class FilterParameters(object):
       w.connect("coordinatesChanged(double*)", lambda val,widget=w,name=name:self.onIntVectorChanged(name,widget,val))
     self.widgetConnections.append((w, "coordinatesChanged(double*)"))
 
-    exec('default = self.filter.Get{0}()'.format(name)) in globals(), locals()
+    exec('default = self.filter.Get{0}()'.format(name), globals(), locals())
     w.coordinates = ",".join(str(x) for x in default)
     return w
 
@@ -952,14 +960,14 @@ class FilterParameters(object):
     elif type=="int32_t" or  type=="uint64_t" or type=="int":
       w.setRange(-2147483648,2147483647)
 
-    exec('default = self.filter.Get{0}()'.format(name)) in globals(), locals()
+    exec('default = self.filter.Get{0}()'.format(name), globals(), locals())
     w.setValue(int(default))
     w.connect("valueChanged(int)", lambda val,name=name:self.onScalarChanged(name,val))
     self.widgetConnections.append((w, "valueChanged(int)"))
     return w
 
   def createBoolWidget(self,name):
-    exec('default = self.filter.Get{0}()'.format(name)) in globals(), locals()
+    exec('default = self.filter.Get{0}()'.format(name), globals(), locals())
     w = qt.QCheckBox()
     self.widgets.append(w)
 
@@ -971,7 +979,7 @@ class FilterParameters(object):
     return w
 
   def createDoubleWidget(self,name):
-    exec('default = self.filter.Get{0}()'.format(name)) in globals(), locals()
+    exec('default = self.filter.Get{0}()'.format(name), globals(), locals())
     w = qt.QDoubleSpinBox()
     self.widgets.append(w)
 
