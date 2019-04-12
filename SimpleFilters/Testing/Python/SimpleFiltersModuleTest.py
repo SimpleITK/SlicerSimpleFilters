@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 import qt
 import slicer
@@ -37,7 +38,7 @@ class SimpleFiltersTest(unittest.TestCase):
     m = slicer.util.mainWindow()
     m.moduleSelector().selectModule('SimpleFilters')
 
-    print "testing my test...."
+    print("testing my test....")
 
     testWidget = slicer.modules.SimpleFiltersWidget
 
