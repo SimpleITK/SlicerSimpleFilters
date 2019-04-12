@@ -96,8 +96,7 @@ class SimpleFiltersWidget(object):
       self.parent.show()
 
     jsonFiles = glob(SimpleFilters.JSON_DIR+"*.json")
-    cmp = lambda x, y: (x > y) - (x < y)
-    jsonFiles.sort(cmp=lambda x,y: cmp(os.path.basename(x), os.path.basename(y)))
+    jsonFiles.sort(key=lambda x: os.path.basename(x))
 
     self.jsonFilters = []
 
