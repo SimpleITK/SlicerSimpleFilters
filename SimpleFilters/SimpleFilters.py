@@ -102,14 +102,14 @@ class SimpleFiltersWidget(object):
 
     for fname in jsonFiles:
       try:
-        fp = file(fname, "r")
-        j = json.load(fp,object_pairs_hook=OrderedDict)
-        if j["name"] in dir(sitk):
-          self.jsonFilters.append(j)
-        else:
-          if j["itk_module"] in sitk.Version().ITKModulesEnabled():
-            import sys
-            sys.stderr.write("Unknown SimpleITK class \"{0}\".\n".format(j["name"]))
+        with open(fname, "r") as fp:
+          j = json.load(fp,object_pairs_hook=OrderedDict)
+          if j["name"] in dir(sitk):
+            self.jsonFilters.append(j)
+          else:
+            if j["itk_module"] in sitk.Version().ITKModulesEnabled():
+              import sys
+              sys.stderr.write("Unknown SimpleITK class \"{0}\".\n".format(j["name"]))
       except Exception as e:
         import sys
         sys.stderr.write("Error while reading \"{0}\". Exception: {1}\n".format(fname, e))
