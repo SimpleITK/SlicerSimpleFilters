@@ -102,7 +102,7 @@ class SimpleFiltersWidget(object):
 
     for fname in jsonFiles:
       try:
-        fp = file(fname, "r")
+        fp = open(fname, "r")
         j = json.load(fp,object_pairs_hook=OrderedDict)
         if j["name"] in dir(sitk):
           self.jsonFilters.append(j)
@@ -907,7 +907,7 @@ class FilterParameters(object):
 
       # check if current item is default, set if it is
       exec('itemValue='+v, globals(), locals())
-      if itemValue  == default:
+      if itemValue  == locals()["default"]:
         w.setCurrentIndex(w.count-1)
 
     w.connect("currentIndexChanged(int)", lambda selectorIndex,n=name,selector=w:self.onEnumChanged(n,selectorIndex,selector))
@@ -938,7 +938,7 @@ class FilterParameters(object):
     self.widgetConnections.append((w, "coordinatesChanged(double*)"))
 
     exec('default = self.filter.Get{0}()'.format(name), globals(), locals())
-    w.coordinates = ",".join(str(x) for x in default)
+    w.coordinates = ",".join(str(x) for x in locals()["default"])
     return w
 
   def createIntWidget(self,name,type="int"):
@@ -960,7 +960,7 @@ class FilterParameters(object):
       w.setRange(-2147483648,2147483647)
 
     exec('default = self.filter.Get{0}()'.format(name), globals(), locals())
-    w.setValue(int(default))
+    w.setValue(int(locals()["default"]))
     w.connect("valueChanged(int)", lambda val,name=name:self.onScalarChanged(name,val))
     self.widgetConnections.append((w, "valueChanged(int)"))
     return w
@@ -970,7 +970,7 @@ class FilterParameters(object):
     w = qt.QCheckBox()
     self.widgets.append(w)
 
-    w.setChecked(default)
+    w.setChecked(locals()["default"])
 
     w.connect("stateChanged(int)", lambda val,name=name:self.onScalarChanged(name,bool(val)))
     self.widgetConnections.append((w, "stateChanged(int)"))
@@ -985,7 +985,7 @@ class FilterParameters(object):
     w.setRange(-3.40282e+038, 3.40282e+038)
     w.decimals = 5
 
-    w.setValue(default)
+    w.setValue(locals()["default"])
     w.connect("valueChanged(double)", lambda val,name=name:self.onScalarChanged(name,val))
     self.widgetConnections.append((w, "valueChanged(double)"))
 
