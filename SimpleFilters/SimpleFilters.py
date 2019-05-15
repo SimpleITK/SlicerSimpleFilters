@@ -434,7 +434,10 @@ class SimpleFiltersLogic(object):
         self.main_queue.put(lambda img=img:self.updateOutput(img))
 
     except Exception as e:
-      msg = e.message
+      if hasattr(e, 'message'):
+        msg = e.message
+      else:
+        msg = str(e)
       self.abort = True
 
       self.yieldPythonGIL()
