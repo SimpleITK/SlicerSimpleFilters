@@ -900,7 +900,7 @@ class FilterParameters(object):
     w = qt.QComboBox()
     self.widgets.append(w)
 
-    exec('default=self.filter.Get{0}()'.format(name), globals(), locals())
+    default = self._getParameterValue(name)
 
     if valueList is None:
       valueList = ["self.filter."+e for e in enumList]
@@ -940,7 +940,7 @@ class FilterParameters(object):
       w.connect("coordinatesChanged(double*)", lambda val,widget=w,name=name:self.onIntVectorChanged(name,widget,val))
     self.widgetConnections.append((w, "coordinatesChanged(double*)"))
 
-    exec('default = self.filter.Get{0}()'.format(name), globals(), locals())
+    default = self._getParameterValue(name)
     w.coordinates = ",".join(str(x) for x in default)
     return w
 
@@ -962,33 +962,36 @@ class FilterParameters(object):
     elif type=="int32_t" or  type=="uint64_t" or type=="int":
       w.setRange(-2147483648,2147483647)
 
-    exec('default = self.filter.Get{0}()'.format(name), globals(), locals())
-    w.setValue(int(default))
+    w.setValue(int(self._getParameterValue(name)))
     w.connect("valueChanged(int)", lambda val,name=name:self.onScalarChanged(name,val))
     self.widgetConnections.append((w, "valueChanged(int)"))
     return w
 
   def createBoolWidget(self,name):
-    exec('default = self.filter.Get{0}()'.format(name), globals(), locals())
     w = qt.QCheckBox()
     self.widgets.append(w)
 
-    w.setChecked(default)
+    w.setChecked(self._getParameterValue(name))
 
     w.connect("stateChanged(int)", lambda val,name=name:self.onScalarChanged(name,bool(val)))
     self.widgetConnections.append((w, "stateChanged(int)"))
 
     return w
 
+  def _getParameterValue(self, parameterName):
+    ldict = locals().copy()
+    exec('default = self.filter.Get{0}()'.format(parameterName), globals(), ldict)
+    return ldict['default']
+
   def createDoubleWidget(self,name):
-    exec('default = self.filter.Get{0}()'.format(name), globals(), locals())
+
     w = qt.QDoubleSpinBox()
     self.widgets.append(w)
 
     w.setRange(-3.40282e+038, 3.40282e+038)
     w.decimals = 5
 
-    w.setValue(default)
+    w.setValue(self._getParameterValue(name))
     w.connect("valueChanged(double)", lambda val,name=name:self.onScalarChanged(name,val))
     self.widgetConnections.append((w, "valueChanged(double)"))
 
