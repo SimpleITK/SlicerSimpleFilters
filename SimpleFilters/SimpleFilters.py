@@ -909,8 +909,9 @@ class FilterParameters(object):
       w.addItem(e,v)
 
       # check if current item is default, set if it is
-      exec('itemValue='+v, globals(), locals())
-      if itemValue  == default:
+      ldict = locals().copy()
+      exec('itemValue='+v, globals(), ldict)
+      if ldict['itemValue'] == default:
         w.setCurrentIndex(w.count-1)
 
     w.connect("currentIndexChanged(int)", lambda selectorIndex,n=name,selector=w:self.onEnumChanged(n,selectorIndex,selector))
