@@ -102,14 +102,14 @@ class SimpleFiltersWidget(object):
 
     for fname in jsonFiles:
       try:
-        fp = file(fname, "r")
-        j = json.load(fp,object_pairs_hook=OrderedDict)
-        if j["name"] in dir(sitk):
-          self.jsonFilters.append(j)
-        else:
-          if j["itk_module"] in sitk.Version().ITKModulesEnabled():
-            import sys
-            sys.stderr.write("Unknown SimpleITK class \"{0}\".\n".format(j["name"]))
+        with open(fname, "r") as fp:
+          j = json.load(fp,object_pairs_hook=OrderedDict)
+          if j["name"] in dir(sitk):
+            self.jsonFilters.append(j)
+          else:
+            if j["itk_module"] in sitk.Version().ITKModulesEnabled():
+              import sys
+              sys.stderr.write("Unknown SimpleITK class \"{0}\".\n".format(j["name"]))
       except Exception as e:
         import sys
         sys.stderr.write("Error while reading \"{0}\". Exception: {1}\n".format(fname, e))
@@ -434,7 +434,10 @@ class SimpleFiltersLogic(object):
         self.main_queue.put(lambda img=img:self.updateOutput(img))
 
     except Exception as e:
-      msg = e.message
+      if hasattr(e, 'message'):
+        msg = e.message
+      else:
+        msg = str(e)
       self.abort = True
 
       self.yieldPythonGIL()
@@ -897,7 +900,7 @@ class FilterParameters(object):
     w = qt.QComboBox()
     self.widgets.append(w)
 
-    exec('default=self.filter.Get{0}()'.format(name), globals(), locals())
+    default = self._getParameterValue(name)
 
     if valueList is None:
       valueList = ["self.filter."+e for e in enumList]
@@ -906,8 +909,9 @@ class FilterParameters(object):
       w.addItem(e,v)
 
       # check if current item is default, set if it is
-      exec('itemValue='+v, globals(), locals())
-      if itemValue  == default:
+      ldict = locals().copy()
+      exec('itemValue='+v, globals(), ldict)
+      if ldict['itemValue'] == default:
         w.setCurrentIndex(w.count-1)
 
     w.connect("currentIndexChanged(int)", lambda selectorIndex,n=name,selector=w:self.onEnumChanged(n,selectorIndex,selector))
@@ -937,7 +941,7 @@ class FilterParameters(object):
       w.connect("coordinatesChanged(double*)", lambda val,widget=w,name=name:self.onIntVectorChanged(name,widget,val))
     self.widgetConnections.append((w, "coordinatesChanged(double*)"))
 
-    exec('default = self.filter.Get{0}()'.format(name), globals(), locals())
+    default = self._getParameterValue(name)
     w.coordinates = ",".join(str(x) for x in default)
     return w
 
@@ -959,33 +963,36 @@ class FilterParameters(object):
     elif type=="int32_t" or  type=="uint64_t" or type=="int":
       w.setRange(-2147483648,2147483647)
 
-    exec('default = self.filter.Get{0}()'.format(name), globals(), locals())
-    w.setValue(int(default))
+    w.setValue(int(self._getParameterValue(name)))
     w.connect("valueChanged(int)", lambda val,name=name:self.onScalarChanged(name,val))
     self.widgetConnections.append((w, "valueChanged(int)"))
     return w
 
   def createBoolWidget(self,name):
-    exec('default = self.filter.Get{0}()'.format(name), globals(), locals())
     w = qt.QCheckBox()
     self.widgets.append(w)
 
-    w.setChecked(default)
+    w.setChecked(self._getParameterValue(name))
 
     w.connect("stateChanged(int)", lambda val,name=name:self.onScalarChanged(name,bool(val)))
     self.widgetConnections.append((w, "stateChanged(int)"))
 
     return w
 
+  def _getParameterValue(self, parameterName):
+    ldict = locals().copy()
+    exec('default = self.filter.Get{0}()'.format(parameterName), globals(), ldict)
+    return ldict['default']
+
   def createDoubleWidget(self,name):
-    exec('default = self.filter.Get{0}()'.format(name), globals(), locals())
+
     w = qt.QDoubleSpinBox()
     self.widgets.append(w)
 
     w.setRange(-3.40282e+038, 3.40282e+038)
     w.decimals = 5
 
-    w.setValue(default)
+    w.setValue(self._getParameterValue(name))
     w.connect("valueChanged(double)", lambda val,name=name:self.onScalarChanged(name,val))
     self.widgetConnections.append((w, "valueChanged(double)"))
 
