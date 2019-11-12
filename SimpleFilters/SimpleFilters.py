@@ -815,9 +815,10 @@ class FilterParameters(object):
       elif t in ["uint8_t", "int8_t",
                "uint16_t", "int16_t",
                "uint32_t", "int32_t",
-               "uint64_t", "int64_t",
                "unsigned int", "int"]:
         w = self.createIntWidget(member["name"],t)
+      elif t in ["uint64_t", "int64_t"]:
+        w = self.createLargeIntWidget(member["name"])
       else:
         import sys
         sys.stderr.write("Unknown member \"{0}\" of type \"{1}\"\n".format(member["name"],member["type"]))
@@ -958,14 +959,24 @@ class FilterParameters(object):
       w.setRange(0,65535)
     elif type=="int16_t":
       w.setRange(-32678,32767)
-    elif type=="uint32_t" or  type=="uint64_t" or type=="unsigned int":
+    elif type=="uint32_t" or type=="unsigned int":
       w.setRange(0,2147483647)
-    elif type=="int32_t" or  type=="uint64_t" or type=="int":
+    elif type=="int32_t" or type=="int":
       w.setRange(-2147483648,2147483647)
 
     w.setValue(int(self._getParameterValue(name)))
     w.connect("valueChanged(int)", lambda val,name=name:self.onScalarChanged(name,val))
     self.widgetConnections.append((w, "valueChanged(int)"))
+    return w
+
+  def createLargeIntWidget(self,name):
+    w = qt.QLineEdit()
+    self.widgets.append(w)
+    validator = qt.QRegExpValidator(qt.QRegExp(r'[0-9-]{0,20}'), w)
+    w.setValidator(validator)
+    w.setText(self._getParameterValue(name))
+    w.connect("textChanged(QString)", lambda val,name=name:self.onScalarChanged(name,int(val)))
+    self.widgetConnections.append((w, "textChanged(QString)"))
     return w
 
   def createBoolWidget(self,name):
