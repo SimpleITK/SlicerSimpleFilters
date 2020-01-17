@@ -8,6 +8,7 @@ import json
 from collections import OrderedDict
 import re
 import threading
+import time
 
 try:
   import queue
@@ -175,6 +176,8 @@ class SimpleFiltersWidget(object):
     hlayout.addWidget(self.currentStatusLabel)
     self.layout.addLayout(hlayout)
 
+    self.filterStartTime = None
+
     self.progress = qt.QProgressBar()
     self.progress.setRange(0,1000)
     self.progress.setValue(0)
@@ -319,6 +322,7 @@ class SimpleFiltersWidget(object):
 
 
   def onLogicEventStart(self):
+    self.filterStartTime = time.time()
     self.currentStatusLabel.text = "Running"
     self.cancelButton.setDisabled(False)
     self.progress.setValue(0)
@@ -326,7 +330,8 @@ class SimpleFiltersWidget(object):
 
 
   def onLogicEventEnd(self):
-    self.currentStatusLabel.text = "Completed"
+    elapsedTimeSec = time.time() - self.filterStartTime
+    self.currentStatusLabel.text = "Completed ({0:3.1f}s)".format(elapsedTimeSec)
     self.progress.setValue(1000)
 
 
@@ -336,7 +341,7 @@ class SimpleFiltersWidget(object):
 
 
   def onLogicEventProgress(self, progress):
-    self.currentStatusLabel.text = "Running ({0:6.5f})".format(progress)
+    self.currentStatusLabel.text = "Running ({0:3.1f}%)".format(progress*100.0)
     self.progress.setValue(progress*1000)
 
 
