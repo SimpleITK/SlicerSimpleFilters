@@ -317,7 +317,7 @@ class SimpleFiltersWidget:
   def onCancelButton(self):
     self.currentStatusLabel.text = "Aborting"
     if self.logic:
-      self.logic.abort = True;
+      self.logic.abort = True
 
 
   def onLogicEventStart(self):
@@ -401,7 +401,6 @@ class SimpleFiltersLogic:
     print("cmIterationEvent")
     widget = slicer.modules.SimpleFiltersWidget
     self.main_queue.put(lambda: widget.onLogicEventIteration(nIter))
-    ++nIter;
     self.cmdCheckAbort(sitkFilter)
     self.yieldPythonGIL()
 
