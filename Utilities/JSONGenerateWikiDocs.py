@@ -9,7 +9,6 @@
 # Usage: Utilities/JSONGenerateWikiDocs.py SimpleFilters/Resources/json/*.json
 #
 
-from __future__ import print_function
 import json
 import sys
 try:
