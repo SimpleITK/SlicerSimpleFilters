@@ -1,4 +1,3 @@
-from __future__ import print_function
 from functools import reduce
 import os,sys
 import unittest
@@ -26,7 +25,7 @@ sitkUtils = None
 # SimpleFilters
 #
 
-class SimpleFilters(object):
+class SimpleFilters:
 
   # Use class-level scoped variable for module consants
   if not __file__.endswith("SimpleFilters.py"):
@@ -56,7 +55,7 @@ have the same physical locations (spacing, origin, orientation and
 largest possible region), and be the same pixel type.
 <br /><br />
 
-For general information about the module see the <a href=\"{0}/Documentation/Nightly/Modules/SimpleFilters\">online documentation</a>.
+For general information about the module see the <a href=\"{}/Documentation/Nightly/Modules/SimpleFilters\">online documentation</a>.
 <br /><br />
 
 For detailed information about a specific filter please consult the <a href=\"http://www.itk.org/Doxygen/html/\">Insight Toolkit Doxygen</a>.
@@ -75,7 +74,7 @@ The developers would like to thank the support of the Slicer Community, the Insi
 # qSimpleFiltersWidget
 #
 
-class SimpleFiltersWidget(object):
+class SimpleFiltersWidget:
   def __init__(self, parent = None):
 
     # To avoid the overhead of importing SimpleITK during application
@@ -103,17 +102,17 @@ class SimpleFiltersWidget(object):
 
     for fname in jsonFiles:
       try:
-        with open(fname, "r") as fp:
+        with open(fname) as fp:
           j = json.load(fp,object_pairs_hook=OrderedDict)
           if j["name"] in dir(sitk):
             self.jsonFilters.append(j)
           else:
             if j["itk_module"] in sitk.Version().ITKModulesEnabled():
               import sys
-              sys.stderr.write("Unknown SimpleITK class \"{0}\".\n".format(j["name"]))
+              sys.stderr.write("Unknown SimpleITK class \"{}\".\n".format(j["name"]))
       except Exception as e:
         import sys
-        sys.stderr.write("Error while reading \"{0}\". Exception: {1}\n".format(fname, e))
+        sys.stderr.write(f"Error while reading \"{fname}\". Exception: {e}\n")
 
 
     self.filterParameters = None
@@ -225,15 +224,15 @@ class SimpleFiltersWidget(object):
     printStr = []
     currentFilter = self.filterParameters.filter
     varName = currentFilter.__class__.__name__
-    printStr.append('myFilter = {0}()'.format(varName))
+    printStr.append(f'myFilter = {varName}()')
     for key in dir(currentFilter):
       if key == 'GetName' or key.startswith('GetGlobal'):
         pass
       elif key[:3] == 'Get':
         setAttr = key.replace("Get", "Set", 1)
         if hasattr(currentFilter, setAttr):
-          value = eval("currentFilter.{0}()".format( key))
-          printStr.append('myFilter.{0}({1})'.format(setAttr, value))
+          value = eval(f"currentFilter.{key}()")
+          printStr.append(f'myFilter.{setAttr}({value})')
 
     print("\n".join(printStr))
 
@@ -310,7 +309,7 @@ class SimpleFiltersWidget(object):
 
 
       qt.QMessageBox.critical(slicer.util.mainWindow(),
-                              "Exception before execution of {0}".format(self.filterParameters.filter.GetName()),
+                              f"Exception before execution of {self.filterParameters.filter.GetName()}",
                               msg)
 
 
@@ -318,7 +317,7 @@ class SimpleFiltersWidget(object):
   def onCancelButton(self):
     self.currentStatusLabel.text = "Aborting"
     if self.logic:
-      self.logic.abort = True;
+      self.logic.abort = True
 
 
   def onLogicEventStart(self):
@@ -331,7 +330,7 @@ class SimpleFiltersWidget(object):
 
   def onLogicEventEnd(self):
     elapsedTimeSec = time.time() - self.filterStartTime
-    self.currentStatusLabel.text = "Completed ({0:3.1f}s)".format(elapsedTimeSec)
+    self.currentStatusLabel.text = f"Completed ({elapsedTimeSec:3.1f}s)"
     self.progress.setValue(1000)
 
 
@@ -341,7 +340,7 @@ class SimpleFiltersWidget(object):
 
 
   def onLogicEventProgress(self, progress):
-    self.currentStatusLabel.text = "Running ({0:3.1f}%)".format(progress*100.0)
+    self.currentStatusLabel.text = "Running ({:3.1f}%)".format(progress*100.0)
     self.progress.setValue(progress*1000)
 
 
@@ -354,7 +353,7 @@ class SimpleFiltersWidget(object):
 # SimpleFiltersLogic
 #
 
-class SimpleFiltersLogic(object):
+class SimpleFiltersLogic:
   """This class should implement all the actual
   computation done by your module.  The interface
   should be such that other python code can import
@@ -402,7 +401,6 @@ class SimpleFiltersLogic(object):
     print("cmIterationEvent")
     widget = slicer.modules.SimpleFiltersWidget
     self.main_queue.put(lambda: widget.onLogicEventIteration(nIter))
-    ++nIter;
     self.cmdCheckAbort(sitkFilter)
     self.yieldPythonGIL()
 
@@ -447,7 +445,7 @@ class SimpleFiltersLogic(object):
 
       self.yieldPythonGIL()
       self.main_queue.put(lambda :qt.QMessageBox.critical(slicer.util.mainWindow(),
-                                                          "Exception during execution of {0}".format(sitkFilter.GetName()),
+                                                          f"Exception during execution of {sitkFilter.GetName()}",
                                                           msg))
     finally:
       # this filter is persistent, remove commands
@@ -483,7 +481,7 @@ class SimpleFiltersLogic(object):
 
     except Exception as e:
       import sys
-      sys.stderr.write("FilterLogic error in main_queue: \"{0}\"".format(e))
+      sys.stderr.write(f"FilterLogic error in main_queue: \"{e}\"")
 
       # if there was an error try to resume
       if not self.main_queue.empty() or self.main_queue_running:
@@ -544,7 +542,7 @@ class SimpleFiltersLogic(object):
 # Class to manage parameters
 #
 
-class FilterParameters(object):
+class FilterParameters:
   """ This class is for managing the widgets for the parameters for a filter
   """
 
@@ -579,7 +577,7 @@ class FilterParameters(object):
     parametersFormLayout = self.parent.layout()
 
     # You can't use exec in a function that has a subfunction, unless you specify a context.
-    exec('self.filter = sitk.{0}()'.format(json["name"]), globals(), locals())
+    exec('self.filter = sitk.{}()'.format(json["name"]), globals(), locals())
 
     self.prerun_callbacks = []
     self.inputs = []
@@ -598,10 +596,10 @@ class FilterParameters(object):
 
         name = "Input Volume: "
         if  "name" in input:
-          name = "Input {0}: ".format(input["name"])
+          name = "Input {}: ".format(input["name"])
         name = name.replace("Image", "Volume")
 
-        print("adding {1}: {0}".format(name,n))
+        print(f"adding {n}: {name}")
         inputSelectorLabel = qt.QLabel(name)
         self.widgets.append(inputSelectorLabel)
 
@@ -614,7 +612,7 @@ class FilterParameters(object):
 
         if "number_of_inputs" in json and json["number_of_inputs"] != 0:
           import sys
-          sys.stderr.write("Expected \"number_of_inputs\" to be 0 not {0}!".format(json["number_of_inputs"]))
+          sys.stderr.write("Expected \"number_of_inputs\" to be 0 not {}!".format(json["number_of_inputs"]))
 
     else:
 
@@ -673,7 +671,7 @@ class FilterParameters(object):
       self.widgetConnections.append((fiducialSelector, "nodeActivated(vtkMRMLNode*)"))
       self.prerun_callbacks.append(lambda w=fiducialSelector,name=name:self.onFiducialListNode(name,w.currentNode()))
 
-      fiducialSelectorLabel = qt.QLabel("{0}: ".format(name))
+      fiducialSelectorLabel = qt.QLabel(f"{name}: ")
       self.widgets.append(fiducialSelectorLabel)
 
       #todo set tool tip
@@ -712,7 +710,7 @@ class FilterParameters(object):
 
           w1 = fiducialSelector
 
-          fiducialSelectorLabel = qt.QLabel("{0}: ".format(member["name"]))
+          fiducialSelectorLabel = qt.QLabel("{}: ".format(member["name"]))
           self.widgets.append(fiducialSelectorLabel)
 
           icon = qt.QIcon(SimpleFilters.ICON_DIR+"Fiducials.png")
@@ -826,7 +824,7 @@ class FilterParameters(object):
         w = self.createLargeIntWidget(member["name"])
       else:
         import sys
-        sys.stderr.write("Unknown member \"{0}\" of type \"{1}\"\n".format(member["name"],member["type"]))
+        sys.stderr.write("Unknown member \"{}\" of type \"{}\"\n".format(member["name"],member["type"]))
 
       if w:
         self.addWidgetWithToolTipAndLabel(w,member)
@@ -997,7 +995,7 @@ class FilterParameters(object):
 
   def _getParameterValue(self, parameterName):
     ldict = locals().copy()
-    exec('default = self.filter.Get{0}()'.format(parameterName), globals(), ldict)
+    exec(f'default = self.filter.Get{parameterName}()', globals(), ldict)
     return ldict['default']
 
   def createDoubleWidget(self,name):
@@ -1080,7 +1078,7 @@ class FilterParameters(object):
       imgNodeName = self.inputs[0].GetName()
       img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNodeName) )
       coord = img.TransformPhysicalPointToIndex(coord)
-    exec('self.filter.Set{0}(coord)'.format(name))
+    exec(f'self.filter.Set{name}(coord)')
 
   def onFiducialListNode(self, name, mrmlNode):
     annotationHierarchyNode = mrmlNode
@@ -1120,26 +1118,26 @@ class FilterParameters(object):
 
       idx_coords = [img.TransformPhysicalPointToIndex(pt) for pt in coords]
 
-      exec('self.filter.Set{0}(idx_coords)'.format(name))
+      exec(f'self.filter.Set{name}(idx_coords)')
 
   def onScalarChanged(self, name, val):
-    exec('self.filter.Set{0}(val)'.format(name))
+    exec(f'self.filter.Set{name}(val)')
 
   def onEnumChanged(self, name, selectorIndex, selector):
     data=selector.itemData(selectorIndex)
-    exec('self.filter.Set{0}({1})'.format(name,data))
+    exec(f'self.filter.Set{name}({data})')
 
   def onBoolVectorChanged(self, name, widget, val):
     coords = [bool(float(x)) for x in widget.coordinates.split(',')]
-    exec('self.filter.Set{0}(coords)'.format(name))
+    exec(f'self.filter.Set{name}(coords)')
 
   def onIntVectorChanged(self, name, widget, val):
     coords = [int(float(x)) for x in widget.coordinates.split(',')]
-    exec('self.filter.Set{0}(coords)'.format(name))
+    exec(f'self.filter.Set{name}(coords)')
 
   def onFloatVectorChanged(self, name, widget, val):
     coords = [float(x) for x in widget.coordinates.split(',')]
-    exec('self.filter.Set{0}(coords)'.format(name))
+    exec(f'self.filter.Set{name}(coords)')
 
 
   def prerun(self):

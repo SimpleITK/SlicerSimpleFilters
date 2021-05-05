@@ -1,4 +1,3 @@
-from __future__ import print_function
 import unittest
 import qt
 import slicer
@@ -46,6 +45,6 @@ class SimpleFiltersTest(unittest.TestCase):
     for filterIdx in range(testWidget.filterSelector.count):
       someJSON=slicer.modules.SimpleFiltersWidget.jsonFilters[filterIdx]
       testWidget.filterSelector.setCurrentIndex(filterIdx)
-      self.delayDisplay("Testing filter \"{0}\" ({1} of {2}).".format(someJSON["name"], filterIdx, testWidget.filterSelector.count),msec=100 )
+      self.delayDisplay("Testing filter \"{}\" ({} of {}).".format(someJSON["name"], filterIdx, testWidget.filterSelector.count),msec=100 )
 
     return True
