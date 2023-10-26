@@ -282,6 +282,7 @@ class SimpleFiltersWidget:
 
 
   def onApplyButton(self):
+
     try:
 
       self.currentStatusLabel.text = "Starting"
@@ -298,20 +299,19 @@ class SimpleFiltersWidget:
                      self.filterParameters.outputLabelMap,
                      *self.filterParameters.inputs)
 
-    except:
+    except Exception as e:
       self.currentStatusLabel.text = "Exception"
 
-      import sys
-      msg = sys.exc_info()[0]
+      import traceback
+      traceback.print_exc()
 
       # if there was an exception during start-up make sure to finish
       self.onLogicRunStop()
 
-
-      qt.QMessageBox.critical(slicer.util.mainWindow(),
-                              f"Exception before execution of {self.filterParameters.filter.GetName()}",
-                              msg)
-
+      slicer.util.errorDisplay(
+        f'Error before execution of {self.filterParameters.filter.GetName()}:\n\n{e}',
+        detailedText=traceback.format_exc()
+        )
 
 
   def onCancelButton(self):
@@ -428,8 +428,9 @@ class SimpleFiltersLogic:
         sitkFilter.AddCommand(sitk.sitkEndEvent, lambda: self.cmdEndEvent())
 
       except:
-        import sys
-        print("Unexpected error:", sys.exc_info()[0])
+
+        import traceback
+        traceback.print_exc()
 
       img = sitkFilter.Execute(*inputImages)
 
@@ -437,6 +438,9 @@ class SimpleFiltersLogic:
         self.main_queue.put(lambda img=img:self.updateOutput(img))
 
     except Exception as e:
+      import traceback
+      traceback.print_exc()
+
       if hasattr(e, 'message'):
         msg = e.message
       else:
@@ -444,9 +448,10 @@ class SimpleFiltersLogic:
       self.abort = True
 
       self.yieldPythonGIL()
-      self.main_queue.put(lambda :qt.QMessageBox.critical(slicer.util.mainWindow(),
-                                                          f"Exception during execution of {sitkFilter.GetName()}",
-                                                          msg))
+      self.main_queue.put(lambda : slicer.util.errorDisplay(
+        f"Error during execution of {sitkFilter.GetName()}:\n\n{msg}",
+        detailedText=traceback.format_exc())
+        )
     finally:
       # this filter is persistent, remove commands
       sitkFilter.RemoveAllCommands()
@@ -480,8 +485,15 @@ class SimpleFiltersLogic:
         qt.QTimer.singleShot(0, self.main_queue_process)
 
     except Exception as e:
-      import sys
-      sys.stderr.write(f"FilterLogic error in main_queue: \"{e}\"")
+      # We get here for example when an exception thrown in SimpleITK ImageFileWriter_Execute
+      # (can be triggered by running ResampleImageFilter on MRBrainTumor1 sample data set with default parameters)
+
+      import traceback
+      traceback.print_exc()
+
+      slicer.util.errorDisplay(
+        f'Error during processing in Simple Filters module:\n\n{e}',
+        detailedText=traceback.format_exc())
 
       # if there was an error try to resume
       if not self.main_queue.empty() or self.main_queue_running:
@@ -489,10 +501,9 @@ class SimpleFiltersLogic:
 
   def updateOutput(self,img):
 
-    nodeWriteAddress=sitkUtils.GetSlicerITKReadWriteAddress(self.outputNodeName)
+    node = slicer.mrmlScene.GetNodeByID(self.outputNodeID)
+    nodeWriteAddress=sitkUtils.GetSlicerITKReadWriteAddress(node)
     sitk.WriteImage(img,nodeWriteAddress)
-
-    node = slicer.util.getNode(self.outputNodeName)
 
     applicationLogic = slicer.app.applicationLogic()
     selectionNode = applicationLogic.GetSelectionNode()
@@ -517,18 +528,18 @@ class SimpleFiltersLogic:
 
     inputImages = []
 
-    for i in inputs:
-      if i is None:
+    for imgNode in inputs:
+      if imgNode is None:
         break
 
-      imgNodeName = i.GetName()
-
-      img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNodeName) )
+      img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNode))
       inputImages.append(img)
 
     self.output = None
     # check
-    self.outputNodeName = outputMRMLNode.GetName()
+    if outputMRMLNode is None:
+      raise ValueError("Output volume is not selected")
+    self.outputNodeID = outputMRMLNode.GetID()
     self.outputLabelMap = outputLabelMap
 
     self.abort = False
@@ -561,7 +572,7 @@ class FilterParameters:
     self.outputLabelMap = False
 
     self.outputSelector = None
-    self.outputLabelMapBox = None
+    self.outputVolumeTypeLabel = None
 
   def __del__(self):
     self.widgetConnections = []
@@ -847,7 +858,7 @@ class FilterParameters:
     self.outputSelector.addEnabled = True
     self.outputSelector.removeEnabled = False
     self.outputSelector.renameEnabled = True
-    self.outputSelector.noneEnabled = False
+    self.outputSelector.noneEnabled = True
     self.outputSelector.showHidden = False
     self.outputSelector.showChildNodeTypes = False
     self.outputSelector.baseName = json["name"]+" Output"
@@ -864,21 +875,18 @@ class FilterParameters:
     self.output = self.outputSelector.currentNode()
 
     #
-    # LabelMap toggle
+    # LabelMap indicator
     #
-    outputLabelMapLabel = qt.QLabel("LabelMap: ")
+    outputLabelMapLabel = qt.QLabel("")
     self.widgets.append(outputLabelMapLabel)
 
-    self.outputLabelMapBox = qt.QCheckBox()
-    self.widgets.append(self.outputLabelMapBox)
-    self.outputLabelMapBox.setToolTip("Output Volume is set as a labelmap")
-    self.outputLabelMapBox.setChecked(self.outputLabelMap)
-    self.outputLabelMapBox.setDisabled(True)
+    self.outputVolumeTypeLabel = qt.QLabel()
+    self.widgets.append(self.outputVolumeTypeLabel)
+    self.outputVolumeTypeLabel.setToolTip("Type of the selected Output Volume")
+    self.onOutputSelect(self.outputSelector.currentNode())
 
-    self.outputLabelMapBox.connect("stateChanged(int)", lambda val:self.onOutputLabelMapChanged(bool(val)))
-    self.widgetConnections.append((self.outputLabelMapBox, "stateChanged(int)"))
      # add to layout after connection
-    parametersFormLayout.addRow(outputLabelMapLabel, self.outputLabelMapBox)
+    parametersFormLayout.addRow(outputLabelMapLabel, self.outputVolumeTypeLabel)
 
 
   def createInputWidget(self,n, noneEnabled=False):
@@ -1048,11 +1056,12 @@ class FilterParameters:
 
   def onOutputSelect(self, mrmlNode):
     self.output = mrmlNode
-    self.onOutputLabelMapChanged(mrmlNode.IsA("vtkMRMLLabelMapVolumeNode"))
-
-  def onOutputLabelMapChanged(self, v):
-    self.outputLabelMap = v
-    self.outputLabelMapBox.setChecked(v)
+    if self.output:
+      self.outputLabelMap = mrmlNode.IsA("vtkMRMLLabelMapVolumeNode")
+      self.outputVolumeTypeLabel.text = "  type: label" if self.outputLabelMap else ""
+    else:
+      self.outputLabelMap = False
+      self.outputVolumeTypeLabel.text = ""
 
   def onFiducialNode(self, name, mrmlWidget, isPoint):
     if not mrmlWidget.visible:
@@ -1060,25 +1069,25 @@ class FilterParameters:
     annotationFiducialNode = mrmlWidget.currentNode()
 
     # point in physical space
-    coord = [0,0,0]
+    coord_RAS = [0,0,0]
 
     if annotationFiducialNode.GetClassName() == "vtkMRMLMarkupsFiducialNode":
       # slicer4 Markups node
       if annotationFiducialNode.GetNumberOfFiducials() < 1:
         return
-      annotationFiducialNode.GetNthFiducialPosition(0, coord)
+      annotationFiducialNode.GetNthFiducialPosition(0, coord_RAS)
     else:
-      annotationFiducialNode.GetFiducialCoordinates(coord)
+      annotationFiducialNode.GetFiducialCoordinates(coord_RAS)
 
-    # HACK transform from RAS to LPS
-    coord = [-coord[0],-coord[1],coord[2]]
+    # Transform from RAS (Slicer internal coordinate system) to LPS (coordinate system in files)
+    coord_LPS = [-coord_RAS[0],-coord_RAS[1],coord_RAS[2]]
 
     # FIXME: we should not need to copy the image
     if not isPoint and len(self.inputs) and self.inputs[0]:
-      imgNodeName = self.inputs[0].GetName()
-      img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNodeName) )
-      coord = img.TransformPhysicalPointToIndex(coord)
-    exec(f'self.filter.Set{name}(coord)')
+      imgNode = self.inputs[0]
+      img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNode))
+      coord_IJK = img.TransformPhysicalPointToIndex(coord_LPS)
+    exec(f'self.filter.Set{name}(coord_IJK)')
 
   def onFiducialListNode(self, name, mrmlNode):
     annotationHierarchyNode = mrmlNode
@@ -1110,8 +1119,8 @@ class FilterParameters:
         coords.append(coord)
 
     if self.inputs[0]:
-      imgNodeName = self.inputs[0].GetName()
-      img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNodeName) )
+      imgNode = self.inputs[0]
+      img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNode))
 
       # HACK transform from RAS to LPS
       coords = [ [-pt[0],-pt[1],pt[2]] for pt in coords]
