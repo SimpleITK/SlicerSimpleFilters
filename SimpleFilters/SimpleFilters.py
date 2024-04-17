@@ -502,8 +502,10 @@ class SimpleFiltersLogic:
   def updateOutput(self,img):
 
     node = slicer.mrmlScene.GetNodeByID(self.outputNodeID)
-    nodeWriteAddress=sitkUtils.GetSlicerITKReadWriteAddress(node)
-    sitk.WriteImage(img,nodeWriteAddress)
+    
+    # Volume is temporarily set to empty during reading from file, pause rendering to avoid warnings
+    with slicer.util.RenderBlocker():
+      sitkUtils.PushVolumeToSlicer(img, node)
 
     applicationLogic = slicer.app.applicationLogic()
     selectionNode = applicationLogic.GetSelectionNode()
@@ -532,7 +534,7 @@ class SimpleFiltersLogic:
       if imgNode is None:
         break
 
-      img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNode))
+      img = sitkUtils.PullVolumeFromSlicer(imgNode)
       inputImages.append(img)
 
     self.output = None
@@ -1085,7 +1087,7 @@ class FilterParameters:
     # FIXME: we should not need to copy the image
     if not isPoint and len(self.inputs) and self.inputs[0]:
       imgNode = self.inputs[0]
-      img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNode))
+      img = sitkUtils.PullVolumeFromSlicer(imgNode)
       coord_IJK = img.TransformPhysicalPointToIndex(coord_LPS)
     exec(f'self.filter.Set{name}(coord_IJK)')
 
@@ -1120,7 +1122,7 @@ class FilterParameters:
 
     if self.inputs[0]:
       imgNode = self.inputs[0]
-      img = sitk.ReadImage(sitkUtils.GetSlicerITKReadWriteAddress(imgNode))
+      img = sitkUtils.PullVolumeFromSlicer(imgNode)
 
       # HACK transform from RAS to LPS
       coords = [ [-pt[0],-pt[1],pt[2]] for pt in coords]
