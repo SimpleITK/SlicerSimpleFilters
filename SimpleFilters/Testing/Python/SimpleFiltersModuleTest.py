@@ -25,7 +25,7 @@ class SimpleFiltersTest(unittest.TestCase):
     self.info.exec_()
 
     # make sure all events are processed before moving on
-    qt.QApplication.flush()
+    slicer.app.processEvents()
 
   def setUp(self):
     """ Do whatever is needed to reset the state - typically a scene clear will be enough.
