@@ -469,13 +469,37 @@ class SimpleFiltersLogic:
         self.main_queue.put(lambda img=img:self.updateOutput(img))
 
     except Exception as e:
-      import traceback
-      traceback.print_exc()
 
       if hasattr(e, 'message'):
         msg = e.message
       else:
         msg = str(e)
+
+      # Check if this is a pixel type error and retry with float cast
+      if re.search(r'Pixel type:.*is not supported', msg):
+        try:
+          print("This filter is not compatible with the pixel type of the input images. Attempting to retry filter after casting all input images to float.")
+
+          # Cast all input images to float
+          floatImages = [sitk.Cast(img, sitk.sitkFloat32) for img in inputImages]
+          img = sitkFilter.Execute(*floatImages)
+
+          if not self.abort:
+            self.main_queue.put(lambda img=img:self.updateOutput(img))
+          return
+        except Exception as e2:
+          import traceback
+          traceback.print_exc()
+          if hasattr(e2, 'message'):
+            msg = e2.message
+          else:
+            msg = str(e2)
+
+      else:
+        # It is some other error, just log it
+        import traceback
+        traceback.print_exc()
+
       self.abort = True
 
       self.yieldPythonGIL()
@@ -533,7 +557,7 @@ class SimpleFiltersLogic:
   def updateOutput(self,img):
 
     node = slicer.mrmlScene.GetNodeByID(self.outputNodeID)
-    
+
     # Volume is temporarily set to empty during reading from file, pause rendering to avoid warnings
     with slicer.util.RenderBlocker():
       sitkUtils.PushVolumeToSlicer(img, node)
