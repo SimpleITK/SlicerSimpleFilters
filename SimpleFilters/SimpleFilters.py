@@ -206,6 +206,23 @@ class SimpleFiltersWidget:
     hlayout.addWidget(self.applyButton)
     self.layout.addLayout(hlayout)
 
+    #
+    # Advanced Area
+    #
+    advancedCollapsibleButton = ctk.ctkCollapsibleButton()
+    advancedCollapsibleButton.text = "Advanced"
+    advancedCollapsibleButton.collapsed = True
+    self.layout.addWidget(advancedCollapsibleButton)
+
+    # Layout within the advanced collapsible button
+    advancedFormLayout = qt.QFormLayout(advancedCollapsibleButton)
+
+    self.showOutputCheckbox = qt.QCheckBox()
+    self.showOutputCheckbox.checked = True
+    self.showOutputCheckbox.toolTip = "Automatically show output volume in slice views and fit slices to volume after execution is completed."
+    self.showOutputCheckbox.connect('toggled(bool)', self.onShowOutputCheckboxToggled)
+    advancedFormLayout.addRow("Auto-show output:", self.showOutputCheckbox)
+
     # connections
     self.restoreDefaultsButton.connect('clicked(bool)', self.onRestoreDefaultsButton)
     self.applyButton.connect('clicked(bool)', self.onApplyButton)
@@ -290,6 +307,14 @@ class SimpleFiltersWidget:
       self.filterParameters.prerun()
 
       self.logic = SimpleFiltersLogic()
+      self.logic.showOutput = self.showOutputCheckbox.checked
+
+      if self.filterParameters.outputSelector.currentNode() is None:
+        # create a new output volume
+        if self.filterParameters.outputLabelMap:
+          self.filterParameters.outputSelector.addNode("vtkMRMLLabelMapVolumeNode")
+        else:
+          self.filterParameters.outputSelector.addNode("vtkMRMLScalarVolumeNode")
 
       self.printPythonCommand()
 
@@ -318,6 +343,11 @@ class SimpleFiltersWidget:
     self.currentStatusLabel.text = "Aborting"
     if self.logic:
       self.logic.abort = True
+
+
+  def onShowOutputCheckboxToggled(self, checked):
+    if self.logic:
+      self.logic.showOutput = checked
 
 
   def onLogicEventStart(self):
@@ -365,6 +395,7 @@ class SimpleFiltersLogic:
     self.main_queue_running = False
     self.thread = threading.Thread()
     self.abort = False
+    self.showOutput = True
 
 
   def __del__(self):
@@ -507,16 +538,17 @@ class SimpleFiltersLogic:
     with slicer.util.RenderBlocker():
       sitkUtils.PushVolumeToSlicer(img, node)
 
-    applicationLogic = slicer.app.applicationLogic()
-    selectionNode = applicationLogic.GetSelectionNode()
+    if self.showOutput:
+      applicationLogic = slicer.app.applicationLogic()
+      selectionNode = applicationLogic.GetSelectionNode()
 
-    if self.outputLabelMap:
-      selectionNode.SetReferenceActiveLabelVolumeID(node.GetID())
-    else:
-      selectionNode.SetReferenceActiveVolumeID(node.GetID())
+      if self.outputLabelMap:
+        selectionNode.SetReferenceActiveLabelVolumeID(node.GetID())
+      else:
+        selectionNode.SetReferenceActiveVolumeID(node.GetID())
 
-    applicationLogic.PropagateVolumeSelection(0)
-    applicationLogic.FitSliceToAll()
+      applicationLogic.PropagateVolumeSelection(0)
+      applicationLogic.FitSliceToAll()
 
   def run(self, filter, outputMRMLNode, outputLabelMap, *inputs):
     """
@@ -864,8 +896,9 @@ class FilterParameters:
     self.outputSelector.showHidden = False
     self.outputSelector.showChildNodeTypes = False
     self.outputSelector.baseName = json["name"]+" Output"
-    self.outputSelector.setMRMLScene( slicer.mrmlScene )
     self.outputSelector.setToolTip( "Pick the output to the algorithm." )
+    self.outputSelector.noneDisplay = "(Create New Volume)"
+    self.outputSelector.setMRMLScene( slicer.mrmlScene )
 
     self.outputSelector.connect("nodeActivated(vtkMRMLNode*)", lambda node:self.onOutputSelect(node))
     self.widgetConnections.append((self.outputSelector, "nodeActivated(vtkMRMLNode*)"))
