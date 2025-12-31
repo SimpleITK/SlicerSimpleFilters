@@ -985,7 +985,7 @@ class FilterParameters:
   def createLargeIntWidget(self,name):
     w = qt.QLineEdit()
     self.widgets.append(w)
-    validator = qt.QRegExpValidator(qt.QRegExp(r'[0-9-]{0,20}'), w)
+    validator = qt.QRegularExpressionValidator(qt.QRegularExpression(r'^[0-9-]{0,20}$'), w)
     w.setValidator(validator)
     w.setText(self._getParameterValue(name))
     w.connect("textChanged(QString)", lambda val,name=name:self.onScalarChanged(name,int(val)))
