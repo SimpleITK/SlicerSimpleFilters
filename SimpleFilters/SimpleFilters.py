@@ -32,6 +32,7 @@ class SimpleFilters:
     import inspect
     __file__ = inspect.getframeinfo(inspect.currentframe())[0]
 
+  scalarVolumeNodeClasses = ["vtkMRMLScalarVolumeNode", "vtkMRMLLabelMapVolumeNode"]
   ICON_DIR = os.path.dirname(os.path.realpath(__file__)) + '/Resources/Icons/'
   JSON_DIR = os.path.dirname(os.path.realpath(__file__)) + '/Resources/json/'
 
@@ -911,7 +912,7 @@ class FilterParameters:
 
     self.outputSelector = slicer.qMRMLNodeComboBox()
     self.widgets.append(self.outputSelector)
-    self.outputSelector.nodeTypes = ["vtkMRMLScalarVolumeNode", "vtkMRMLLabelMapVolumeNode"]
+    self.outputSelector.nodeTypes = SimpleFilters.scalarVolumeNodeClasses
     self.outputSelector.selectNodeUponCreation = True
     self.outputSelector.addEnabled = True
     self.outputSelector.removeEnabled = False
@@ -951,7 +952,7 @@ class FilterParameters:
   def createInputWidget(self,n, noneEnabled=False):
       inputSelector = slicer.qMRMLNodeComboBox()
       self.widgets.append(inputSelector)
-      inputSelector.nodeTypes = ["vtkMRMLScalarVolumeNode", "vtkMRMLLabelMapVolumeNode"]
+      inputSelector.nodeTypes = SimpleFilters.scalarVolumeNodeClasses
       inputSelector.selectNodeUponCreation = True
       inputSelector.addEnabled = False
       inputSelector.removeEnabled = False
